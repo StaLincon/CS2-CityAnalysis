@@ -1,0 +1,597 @@
+<Window x:Class="DataAnalyzer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="城市政府工作报告生成器 — 都市天际线2"
+        Width="1200" Height="860"
+        MinWidth="960" MinHeight="640"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResize"
+        Background="#0F172A">
+
+    <Window.Resources>
+        <!-- ====== 侧边栏导航项样式 ====== -->
+        <Style x:Key="NavItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Height" Value="48"/>
+            <Setter Property="Padding" Value="20,0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#94A3B8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="NavBorder"
+                                Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}"
+                                BorderThickness="3,0,0,0"
+                                BorderBrush="Transparent">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="28"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           x:Name="Glyph"
+                                           Text="{Binding Glyph}"
+                                           FontSize="16"
+                                           Foreground="{TemplateBinding Foreground}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1"
+                                           x:Name="Label"
+                                           Text="{Binding Label}"
+                                           FontSize="13.5"
+                                           Foreground="{TemplateBinding Foreground}"
+                                           VerticalAlignment="Center"
+                                           Margin="8,0,0,0"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="NavBorder" Property="Background" Value="#1E3A5F"/>
+                                <Setter TargetName="NavBorder" Property="BorderBrush" Value="#3B82F6"/>
+                                <Setter TargetName="Glyph" Property="Foreground" Value="#60A5FA"/>
+                                <Setter TargetName="Label" Property="Foreground" Value="#F1F5F9"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="NavBorder" Property="Background" Value="#1A2744"/>
+                                <Setter TargetName="Glyph" Property="Foreground" Value="#94A3B8"/>
+                                <Setter TargetName="Label" Property="Foreground" Value="#CBD5E1"/>
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                    <Condition Property="IsSelected" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="NavBorder" Property="Background" Value="#1E3A5F"/>
+                                <Setter TargetName="Glyph" Property="Foreground" Value="#60A5FA"/>
+                                <Setter TargetName="Label" Property="Foreground" Value="#F1F5F9"/>
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <!-- ================================ 主布局 ================================ -->
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="232"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ==================== 左侧边栏 ==================== -->
+        <Border Grid.Column="0" Background="#0B1120">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- App 品牌 -->
+                <StackPanel Grid.Row="0" Margin="24,28,24,20">
+                    <Border Width="40" Height="40" CornerRadius="10" Background="#3B82F6" Margin="0,0,0,12">
+                        <TextBlock Text="CG" FontSize="18" FontWeight="Bold" Foreground="White"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   FontFamily="Segoe UI"/>
+                    </Border>
+                    <TextBlock Text="政府工作报告" FontSize="16" FontWeight="SemiBold" Foreground="#F1F5F9"
+                               FontFamily="Segoe UI, Microsoft YaHei"/>
+                    <TextBlock Text="City Government Reporter" FontSize="11" Foreground="#64748B"
+                               FontFamily="Segoe UI" Margin="0,2,0,0"/>
+                </StackPanel>
+
+                <Separator Grid.Row="1" Background="#1E293B" Margin="20,0"/>
+
+                <!-- 导航菜单 -->
+                <ListBox Grid.Row="2"
+                         x:Name="NavList"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         Margin="0,16,0,0"
+                         SelectionChanged="NavList_SelectionChanged">
+                    <ListBoxItem Style="{StaticResource NavItemStyle}">
+                        <ListBoxItem.Tag>PageDataSource</ListBoxItem.Tag>
+                    </ListBoxItem>
+                    <ListBoxItem Style="{StaticResource NavItemStyle}">
+                        <ListBoxItem.Tag>PageReportSettings</ListBoxItem.Tag>
+                    </ListBoxItem>
+                    <ListBoxItem Style="{StaticResource NavItemStyle}">
+                        <ListBoxItem.Tag>PageAiConfig</ListBoxItem.Tag>
+                    </ListBoxItem>
+                    <ListBoxItem Style="{StaticResource NavItemStyle}">
+                        <ListBoxItem.Tag>PageGenerate</ListBoxItem.Tag>
+                    </ListBoxItem>
+                </ListBox>
+
+                <!-- 底部版本信息 -->
+                <StackPanel Grid.Row="3" Margin="24,0,24,20">
+                    <Separator Background="#1E293B" Margin="0,0,0,12"/>
+                    <TextBlock Text="v2.0" FontSize="11" Foreground="#475569" FontFamily="Consolas"/>
+                    <TextBlock Text=".NET 8.0 · WPF" FontSize="10" Foreground="#334155" Margin="0,2,0,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ==================== 右侧内容区 ==================== -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- 页面容器 -->
+            <Grid Grid.Row="0" Margin="28,24,28,12">
+                <Grid.Resources>
+                    <!-- 卡片样式 -->
+                    <Style x:Key="CardStyle" TargetType="Border">
+                        <Setter Property="Background" Value="#1E293B"/>
+                        <Setter Property="BorderBrush" Value="#2A3A5C"/>
+                        <Setter Property="BorderThickness" Value="1"/>
+                        <Setter Property="CornerRadius" Value="12"/>
+                        <Setter Property="Padding" Value="24,20"/>
+                        <Setter Property="Margin" Value="0,0,0,12"/>
+                    </Style>
+
+                    <!-- 卡片标题样式 -->
+                    <Style x:Key="CardTitleStyle" TargetType="TextBlock">
+                        <Setter Property="FontSize" Value="14"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                        <Setter Property="Foreground" Value="#F1F5F9"/>
+                        <Setter Property="Margin" Value="0,0,0,16"/>
+                    </Style>
+
+                    <!-- 字段标签样式 -->
+                    <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
+                        <Setter Property="FontSize" Value="12"/>
+                        <Setter Property="Foreground" Value="#94A3B8"/>
+                        <Setter Property="Margin" Value="0,0,0,6"/>
+                    </Style>
+                </Grid.Resources>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <Grid>
+                        <!-- ====== 第1页：数据源管理 ====== -->
+                    <Grid x:Name="PageDataSource" Visibility="Visible">
+                        <StackPanel>
+                            <!-- 页面标题 -->
+                            <TextBlock Text="数据源与存档管理" FontSize="22" FontWeight="Bold"
+                                       Foreground="#F1F5F9" Margin="0,0,0,20"/>
+
+                            <!-- 数据目录卡片 -->
+                            <Border Style="{StaticResource CardStyle}">
+                                <StackPanel>
+                                    <TextBlock Text="基础数据目录" Style="{StaticResource CardTitleStyle}"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Grid.Column="0" x:Name="TxtDataPath" TextChanged="TxtDataPath_TextChanged"/>
+                                        <Button Grid.Column="1" Content="浏览文件夹" Click="BtnBrowseDataPath"
+                                                Style="{StaticResource BtnSecondary}" Margin="8,0,0,0"/>
+                                    </Grid>
+                                    <TextBlock FontSize="11" Foreground="#64748B" Margin="0,8,0,0"
+                                               Text="选择包含 current_snapshot.json 的目录。支持多存档子文件夹自动扫描。"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 存档列表卡片 -->
+                            <Border Style="{StaticResource CardStyle}">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,12">
+                                        <TextBlock Text="存档列表" Style="{StaticResource CardTitleStyle}"
+                                                   Margin="0" VerticalAlignment="Center"/>
+                                        <Button x:Name="BtnRefreshSaves" Content="刷新列表"
+                                                Click="BtnRefreshSaves_Click"
+                                                Style="{StaticResource BtnSmall}"
+                                                HorizontalAlignment="Right"
+                                                Foreground="#60A5FA"/>
+                                    </Grid>
+
+                                    <TextBlock x:Name="TxtSaveCount" FontSize="12" Foreground="#94A3B8"
+                                               Text="未扫描到存档，请设置数据目录后点击刷新"
+                                               Margin="0,0,0,12"/>
+
+                                    <ListView x:Name="SaveListView"
+                                              Background="#0F172A"
+                                              Foreground="#CDD6F4"
+                                              BorderBrush="#2A3A5C"
+                                              BorderThickness="1"
+                                              SelectionChanged="SaveListView_SelectionChanged"
+                                              MinHeight="160" MaxHeight="280"
+                                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                        <ListView.ItemContainerStyle>
+                                            <Style TargetType="ListViewItem">
+                                                <Setter Property="Height" Value="48"/>
+                                                <Setter Property="Padding" Value="12,4"/>
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="Foreground" Value="#CDD6F4"/>
+                                                <Setter Property="BorderThickness" Value="0"/>
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="ListViewItem">
+                                                            <Border x:Name="ItemBorder"
+                                                                    Background="{TemplateBinding Background}"
+                                                                    Padding="{TemplateBinding Padding}">
+                                                                <GridViewRowPresenter/>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsSelected" Value="True">
+                                                                    <Setter TargetName="ItemBorder" Property="Background" Value="#1E3A5F"/>
+                                                                </Trigger>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter TargetName="ItemBorder" Property="Background" Value="#1A2744"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </ListView.ItemContainerStyle>
+                                        <ListView.View>
+                                            <GridView>
+                                                <GridViewColumn Header="存档名称" Width="170" DisplayMemberBinding="{Binding FolderName}"/>
+                                                <GridViewColumn Header="游戏时间" Width="120" DisplayMemberBinding="{Binding GameDateDisplay}"/>
+                                                <GridViewColumn Header="人口" Width="90" DisplayMemberBinding="{Binding PopulationDisplay}"/>
+                                                <GridViewColumn Header="幸福度" Width="75" DisplayMemberBinding="{Binding HappinessDisplay}"/>
+                                                <GridViewColumn Header="健康度" Width="75" DisplayMemberBinding="{Binding HealthDisplay}"/>
+                                                <GridViewColumn Header="财政收支" Width="110" DisplayMemberBinding="{Binding FinanceDisplay}"/>
+                                                <GridViewColumn Header="历史记录" Width="80">
+                                                    <GridViewColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="{Binding HistoryRecordCount, StringFormat={}{0}条}"
+                                                                       Foreground="#94A3B8"/>
+                                                        </DataTemplate>
+                                                    </GridViewColumn.CellTemplate>
+                                                </GridViewColumn>
+                                                <GridViewColumn Header="最后导出" Width="130"
+                                                                DisplayMemberBinding="{Binding LastExportTime, StringFormat=yyyy-MM-dd HH:mm}"/>
+                                            </GridView>
+                                        </ListView.View>
+                                    </ListView>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- ====== 第2页：报告设置 ====== -->
+                    <Grid x:Name="PageReportSettings" Visibility="Collapsed">
+                        <StackPanel>
+                            <TextBlock Text="报告类型与输出设置" FontSize="22" FontWeight="Bold"
+                                       Foreground="#F1F5F9" Margin="0,0,0,20"/>
+
+                            <!-- 报告类型 -->
+                            <Border Style="{StaticResource CardStyle}">
+                                <StackPanel>
+                                    <TextBlock Text="报告类型" Style="{StaticResource CardTitleStyle}"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="240"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox Grid.Column="0" x:Name="CmbReportTemplate"
+                                                  SelectionChanged="CmbReportTemplate_SelectionChanged">
+                                            <ComboBoxItem Content="城市发展工作报告（自建市以来）" Tag="Development"/>
+                                        </ComboBox>
+                                        <TextBlock Grid.Column="1" FontSize="11" Foreground="#64748B"
+                                                   Margin="16,0,0,0" VerticalAlignment="Center"
+                                                   Text="发展报告：涵盖建市以来全部数据的综合分析。"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 城市名称 -->
+                            <Border Style="{StaticResource CardStyle}">
+                                <StackPanel>
+                                    <TextBlock Text="城市名称" Style="{StaticResource CardTitleStyle}"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="240"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Grid.Column="0" x:Name="TxtCityName"/>
+                                        <TextBlock Grid.Column="1" FontSize="11" Foreground="#64748B"
+                                                   Margin="16,0,0,0" VerticalAlignment="Center"
+                                                   Text="选择存档后自动填充。可手动修改，将出现在报告封面。"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 输出路径 -->
+                            <Border Style="{StaticResource CardStyle}">
+                                <StackPanel>
+                                    <TextBlock Text="输出路径" Style="{StaticResource CardTitleStyle}"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Grid.Column="0" x:Name="TxtOutputPath"/>
+                                        <Button Grid.Column="1" Content="选择路径" Click="BtnBrowseOutputPath"
+                                                Style="{StaticResource BtnSecondary}" Margin="8,0,0,0"/>
+                                    </Grid>
+                                    <TextBlock FontSize="11" Foreground="#64748B" Margin="0,8,0,0"
+                                               Text="生成的 .docx Word 文档输出位置。选择存档后自动生成文件名。"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- ====== 第3页：AI接口配置 ====== -->
+                    <Grid x:Name="PageAiConfig" Visibility="Collapsed">
+                        <StackPanel>
+                            <TextBlock Text="AI 接口配置" FontSize="22" FontWeight="Bold"
+                                       Foreground="#F1F5F9" Margin="0,0,0,20"/>
+
+                            <!-- 提供商 & 代理 -->
+                            <Border Style="{StaticResource CardStyle}">
+                                <StackPanel>
+                                    <TextBlock Text="服务提供商" Style="{StaticResource CardTitleStyle}"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="16"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="提供商" Style="{StaticResource FieldLabelStyle}"/>
+                                            <ComboBox x:Name="CmbProvider" SelectionChanged="CmbProvider_SelectionChanged"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="代理地址（可选）" Style="{StaticResource FieldLabelStyle}"/>
+                                            <TextBox x:Name="TxtProxyUrl"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBlock FontSize="11" Foreground="#64748B" Margin="0,8,0,0"
+                                               Text="支持 OpenAI / DeepSeek / SiliconFlow / Azure OpenAI / Ollama 等多种后端。"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- API URL -->
+                            <Border Style="{StaticResource CardStyle}">
+                                <StackPanel>
+                                    <TextBlock Text="API 端点" Style="{StaticResource CardTitleStyle}"/>
+                                    <TextBlock Text="API URL" Style="{StaticResource FieldLabelStyle}"/>
+                                    <TextBox x:Name="TxtApiUrl"/>
+                                    <TextBlock FontSize="11" Foreground="#64748B" Margin="0,6,0,0"
+                                               Text="切换提供商会自动填充默认 URL。Ollama 使用 http://localhost:11434/v1/chat/completions。"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- API Key -->
+                            <Border Style="{StaticResource CardStyle}">
+                                <StackPanel>
+                                    <TextBlock Text="认证" Style="{StaticResource CardTitleStyle}"/>
+                                    <TextBlock Text="API Key" Style="{StaticResource FieldLabelStyle}"/>
+                                    <TextBox x:Name="TxtApiKey"/>
+                                    <TextBlock FontSize="11" Foreground="#64748B" Margin="0,6,0,0"
+                                               Text="密钥仅保存在本地 appsettings.json 文件中，不会上传。"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 模型 & 操作 -->
+                            <Border Style="{StaticResource CardStyle}">
+                                <StackPanel>
+                                    <TextBlock Text="模型与测试" Style="{StaticResource CardTitleStyle}"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="模型名称" Style="{StaticResource FieldLabelStyle}"/>
+                                            <ComboBox x:Name="CmbModel" IsEditable="True"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="1" x:Name="BtnFetchModels" Content="获取模型列表"
+                                                Click="BtnFetchModels_Click"
+                                                Style="{StaticResource BtnSecondary}" Margin="16,18,0,0"
+                                                VerticalAlignment="Bottom"/>
+                                        <Button Grid.Column="2" x:Name="BtnTestConnection" Content="测试连接"
+                                                Click="BtnTestConnection_Click"
+                                                Style="{StaticResource BtnSecondary}" Margin="8,18,0,0"
+                                                VerticalAlignment="Bottom"
+                                                Foreground="#10B981"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- ====== 第4页：生成报告 ====== -->
+                    <Grid x:Name="PageGenerate" Visibility="Collapsed">
+                        <StackPanel>
+                            <TextBlock Text="生成报告" FontSize="22" FontWeight="Bold"
+                                       Foreground="#F1F5F9" Margin="0,0,0,20"/>
+
+                            <!-- 生成操作 -->
+                            <Border Style="{StaticResource CardStyle}">
+                                <StackPanel>
+                                    <TextBlock Text="报告生成" Style="{StaticResource CardTitleStyle}"/>
+                                    <TextBlock FontSize="12" Foreground="#94A3B8" Margin="0,0,0,16"
+                                               Text="预览报告通过数据模板直接生成（无需API）。完整报告调用AI润色各章节内容。"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button x:Name="BtnPreview" Content="生成预览报告"
+                                                Click="BtnPreview_Click"
+                                                Style="{StaticResource BtnSecondary}"
+                                                FontSize="15" FontWeight="SemiBold"
+                                                Foreground="#22D3EE" Padding="28,12"/>
+                                        <Button x:Name="BtnGenerate" Content="AI 生成完整报告"
+                                                Click="BtnGenerate_Click"
+                                                Style="{StaticResource BtnPrimary}"
+                                                FontSize="15" FontWeight="SemiBold"
+                                                Padding="28,12" Margin="12,0,0,0"/>
+                                        <Button x:Name="BtnOpenReport" Content="打开最近报告"
+                                                Click="BtnOpenReport_Click"
+                                                Style="{StaticResource BtnSecondary}"
+                                                FontSize="14" Padding="20,12" Margin="12,0,0,0"
+                                                IsEnabled="False"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 进度 -->
+                            <Border Style="{StaticResource CardStyle}">
+                                <StackPanel>
+                                    <TextBlock Text="生成进度" Style="{StaticResource CardTitleStyle}"/>
+                                    <ProgressBar x:Name="Progress" Minimum="0" Maximum="100" Value="0"
+                                                 Height="8" Margin="0,0,0,8"/>
+                                    <TextBlock FontSize="12" Foreground="#64748B"
+                                               Text="就绪 — 请在左侧完成配置后开始生成"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 使用提示 -->
+                            <Border Style="{StaticResource CardStyle}" BorderBrush="#2A3A5C">
+                                <StackPanel>
+                                    <TextBlock Text="使用流程" Style="{StaticResource CardTitleStyle}"
+                                               Foreground="#94A3B8"/>
+                                    <Grid Margin="0,0,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Step 1 -->
+                                        <StackPanel Grid.Column="0">
+                                            <Border Width="32" Height="32" CornerRadius="16" Background="#1E3A5F"
+                                                    Margin="0,0,0,8">
+                                                <TextBlock Text="1" FontSize="14" FontWeight="Bold"
+                                                           Foreground="#60A5FA"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <TextBlock Text="设置数据源" FontSize="13" Foreground="#F1F5F9"/>
+                                            <TextBlock Text="选择包含城市数据的目录" FontSize="11" Foreground="#64748B"/>
+                                        </StackPanel>
+
+                                        <Separator Grid.Column="1" Background="#334155" Margin="16,12"
+                                                   Width="1" Height="Auto"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
+
+                                        <!-- Step 2 -->
+                                        <StackPanel Grid.Column="2">
+                                            <Border Width="32" Height="32" CornerRadius="16" Background="#1E3A5F"
+                                                    Margin="0,0,0,8">
+                                                <TextBlock Text="2" FontSize="14" FontWeight="Bold"
+                                                           Foreground="#60A5FA"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <TextBlock Text="配置报告类型" FontSize="13" Foreground="#F1F5F9"/>
+                                            <TextBlock Text="选择发展/季度报告模板" FontSize="11" Foreground="#64748B"/>
+                                        </StackPanel>
+
+                                        <Separator Grid.Column="3" Background="#334155" Margin="16,12"
+                                                   Width="1" Height="Auto"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
+
+                                        <!-- Step 3 -->
+                                        <StackPanel Grid.Column="4">
+                                            <Border Width="32" Height="32" CornerRadius="16" Background="#1E3A5F"
+                                                    Margin="0,0,0,8">
+                                                <TextBlock Text="3" FontSize="14" FontWeight="Bold"
+                                                           Foreground="#60A5FA"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <TextBlock Text="配置AI &amp; 生成" FontSize="13" Foreground="#F1F5F9"/>
+                                            <TextBlock Text="设置API参数，开始生成" FontSize="11" Foreground="#64748B"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+
+                </Grid>
+
+                </ScrollViewer>
+            </Grid>
+
+            <!-- ==================== 终端输出 ==================== -->
+            <Grid Grid.Row="1" Margin="28,0,28,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- 终端标题栏 -->
+                <Border Grid.Row="0" Background="#1A2744"
+                        CornerRadius="10,10,0,0" Padding="16,10"
+                        BorderBrush="#2A3A5C" BorderThickness="1,1,1,0">
+                    <Grid>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="10" Height="10" CornerRadius="5" Background="#EF4444" Margin="0,0,6,0"/>
+                            <Border Width="10" Height="10" CornerRadius="5" Background="#F59E0B" Margin="0,0,6,0"/>
+                            <Border Width="10" Height="10" CornerRadius="5" Background="#10B981" Margin="0,0,6,0"/>
+                        </StackPanel>
+                        <TextBlock Text="终端输出" FontSize="12" Foreground="#64748B"
+                                   HorizontalAlignment="Center"
+                                   FontFamily="Cascadia Code, Consolas"/>
+                        <TextBlock Text="CONSOLE" FontSize="10" Foreground="#475569"
+                                   HorizontalAlignment="Right"
+                                   FontFamily="Cascadia Code, Consolas"/>
+                    </Grid>
+                </Border>
+
+                <!-- 终端内容 -->
+                <Border Grid.Row="1" Background="#060B14"
+                        CornerRadius="0,0,10,10" Padding="2"
+                        BorderBrush="#2A3A5C" BorderThickness="1,0,1,1">
+                    <ListBox x:Name="TerminalOutput"
+                             FontFamily="Cascadia Code, Consolas, Microsoft YaHei"
+                             FontSize="12"
+                             Background="Transparent"
+                             Foreground="#22D3EE"
+                             BorderThickness="0"
+                             MaxHeight="180"
+                             ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Text}"
+                                           Foreground="{Binding Foreground}"
+                                           FontFamily="Cascadia Code, Consolas, Microsoft YaHei"
+                                           Padding="4,1"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Border>
+            </Grid>
+
+            <!-- 状态栏 -->
+            <StatusBar Grid.Row="2" Margin="0,4,0,0" Padding="16,6">
+                <StatusBarItem>
+                    <TextBlock x:Name="TxtStatus" Text="就绪" FontSize="12"
+                               FontFamily="Cascadia Code, Consolas"/>
+                </StatusBarItem>
+            </StatusBar>
+        </Grid>
+    </Grid>
+</Window>

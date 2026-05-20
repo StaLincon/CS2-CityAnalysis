@@ -1,0 +1,64 @@
+# ==========================================
+# Build outputs
+# ==========================================
+[Dd]ebug/
+[Rr]elease/
+[Bb]uild/
+[Bb]in/
+[Oo]bj/
+publish/
+*.nupkg
+*.snupkg
+
+# ==========================================
+# IDE / Editor
+# ==========================================
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# ==========================================
+# Logs & temp files
+# ==========================================
+*.log
+*.tmp
+*_log.txt
+crash_log.txt
+startup_log.txt
+
+# ==========================================
+# OS generated files
+# ==========================================
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ==========================================
+# Runtime generated
+# ==========================================
+*.docx
+!docs/*.docx
+
+# ==========================================
+# Third-party / reference repos
+# ==========================================
+Cities-Skylines-2-Modding-Guide/
+
+# ==========================================
+# IDE workspace config
+# ==========================================
+.trae/
+
+# ==========================================
+# Temp / scratch files
+# ==========================================
+extract_text.csx
+history.json
+temp_report.zip
+temp_report_extract/
+*.pid
