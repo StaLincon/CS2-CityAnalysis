@@ -62,3 +62,4 @@ history.json
 temp_report.zip
 temp_report_extract/
 *.pid
+release-artifacts/
