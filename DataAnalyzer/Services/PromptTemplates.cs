@@ -50,10 +50,12 @@ namespace DataAnalyzer.Services
         public static string BuildFullDataContext(CityAnalysisReport analysis, StatisticSnapshot current, List<StatisticSnapshot> history, string cityName)
         {
             var sb = new StringBuilder();
+            var elapsedYears = history.Count > 1 ? (double)(history.Count - 1) / 32.0 / 12.0 : 0;
 
             sb.AppendLine($"【城市名称】{cityName}");
             sb.AppendLine($"【统计时点】第{current.GameYear}年第{current.GameMonth}月");
-            sb.AppendLine($"【历史数据点数】{history.Count}个");
+            if (elapsedYears > 0)
+                sb.AppendLine($"【建市年限】逾{elapsedYears:F1}年");
             sb.AppendLine($"【发展阶段】{GameMetricConverter.GetGameStageDescription(current)}");
             sb.AppendLine();
 

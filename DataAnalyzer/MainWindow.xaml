@@ -389,7 +389,7 @@
                                 <StackPanel>
                                     <TextBlock Text="认证" Style="{StaticResource CardTitleStyle}"/>
                                     <TextBlock Text="API Key" Style="{StaticResource FieldLabelStyle}"/>
-                                    <TextBox x:Name="TxtApiKey"/>
+                                    <PasswordBox x:Name="TxtApiKey"/>
                                     <TextBlock FontSize="11" Foreground="#64748B" Margin="0,6,0,0"
                                                Text="密钥仅保存在本地 appsettings.json 文件中，不会上传。"/>
                                 </StackPanel>

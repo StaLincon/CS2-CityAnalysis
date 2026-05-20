@@ -417,46 +417,78 @@ namespace DataAnalyzer.Services
 
         public byte[] GenerateTransportChart()
         {
-            var t = m_Analysis.Transport;
-
-            if (t.TotalPassengers <= 0) return null;
+            if (m_History.Count < 2) return null;
 
             var plt = new Plot();
             SetChineseFonts(plt);
 
-            var values = new double[]
-            {
-                t.Bus.Passengers,
-                t.Subway.Passengers,
-                t.Tram.Passengers,
-                t.Train.Passengers,
-                t.Taxi.Passengers,
-                t.Airplane.Passengers,
-                t.Ship.Passengers
-            };
+            var xs = Enumerable.Range(0, m_History.Count).Select(x => (double)x).ToArray();
 
-            var bars = plt.Add.Bars(values);
-            bars.Color = ScottPlot.Color.FromHex("#1F4E79");
+            var bus = m_History.Select(h => (double)h.PassengerCountBus).ToArray();
+            var subway = m_History.Select(h => (double)h.PassengerCountSubway).ToArray();
+            var tram = m_History.Select(h => (double)h.PassengerCountTram).ToArray();
+            var train = m_History.Select(h => (double)h.PassengerCountTrain).ToArray();
+            var taxi = m_History.Select(h => (double)h.PassengerCountTaxi).ToArray();
+            var airplane = m_History.Select(h => (double)h.PassengerCountAirplane).ToArray();
+            var ship = m_History.Select(h => (double)h.PassengerCountShip).ToArray();
 
-            double[] positions = { 0, 1, 2, 3, 4, 5, 6 };
-            string[] labels = {
-                $"公交\n{t.Bus.Share:F1}%",
-                $"地铁\n{t.Subway.Share:F1}%",
-                $"电车\n{t.Tram.Share:F1}%",
-                $"火车\n{t.Train.Share:F1}%",
-                $"出租\n{t.Taxi.Share:F1}%",
-                $"飞机\n{t.Airplane.Share:F1}%",
-                $"轮船\n{t.Ship.Share:F1}%"
-            };
+            var smoothBus = SmoothData(bus);
+            var smoothSubway = SmoothData(subway);
+            var smoothTram = SmoothData(tram);
+            var smoothTrain = SmoothData(train);
+            var smoothTaxi = SmoothData(taxi);
+            var smoothAirplane = SmoothData(airplane);
+            var smoothShip = SmoothData(ship);
 
-            plt.Axes.Bottom.TickGenerator = new ScottPlot.TickGenerators.NumericManual(positions, labels);
-            plt.Axes.Bottom.Label.Text = "交通方式";
+            var busLine = plt.Add.Scatter(xs, smoothBus);
+            busLine.LegendText = "公交";
+            busLine.LineWidth = 2;
+            busLine.Color = ScottPlot.Color.FromHex("#1F4E79");
+            busLine.MarkerSize = 0;
 
-            plt.Title("公共交通客流分布");
+            var subwayLine = plt.Add.Scatter(xs, smoothSubway);
+            subwayLine.LegendText = "地铁";
+            subwayLine.LineWidth = 2;
+            subwayLine.Color = ScottPlot.Color.FromHex("#22C55E");
+            subwayLine.MarkerSize = 0;
+
+            var tramLine = plt.Add.Scatter(xs, smoothTram);
+            tramLine.LegendText = "电车";
+            tramLine.LineWidth = 2;
+            tramLine.Color = ScottPlot.Color.FromHex("#F59E0B");
+            tramLine.MarkerSize = 0;
+
+            var trainLine = plt.Add.Scatter(xs, smoothTrain);
+            trainLine.LegendText = "火车";
+            trainLine.LineWidth = 2;
+            trainLine.Color = ScottPlot.Color.FromHex("#EF4444");
+            trainLine.MarkerSize = 0;
+
+            var taxiLine = plt.Add.Scatter(xs, smoothTaxi);
+            taxiLine.LegendText = "出租";
+            taxiLine.LineWidth = 2;
+            taxiLine.Color = ScottPlot.Color.FromHex("#8B5CF6");
+            taxiLine.MarkerSize = 0;
+
+            var airplaneLine = plt.Add.Scatter(xs, smoothAirplane);
+            airplaneLine.LegendText = "飞机";
+            airplaneLine.LineWidth = 2;
+            airplaneLine.Color = ScottPlot.Color.FromHex("#06B6D4");
+            airplaneLine.MarkerSize = 0;
+
+            var shipLine = plt.Add.Scatter(xs, smoothShip);
+            shipLine.LegendText = "轮船";
+            shipLine.LineWidth = 2;
+            shipLine.Color = ScottPlot.Color.FromHex("#EC4899");
+            shipLine.MarkerSize = 0;
+
+            plt.Title("公共交通客流趋势");
+            plt.XLabel("游戏时间");
             plt.YLabel("客运量 (人次)");
-            
+            ApplyYearMonthLabels(plt);
             ApplyLayoutOptimizations(plt);
             OptimizeYAxis(plt);
+            plt.ShowLegend();
 
             return plt.GetImage(800, 450).GetImageBytes();
         }

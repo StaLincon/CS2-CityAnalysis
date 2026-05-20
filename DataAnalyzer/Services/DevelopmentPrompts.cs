@@ -43,21 +43,20 @@ namespace DataAnalyzer.Services
             var h = report.History;
             var c = report.Overview;
             var st = report.StageTransition;
+            var elapsedYears = h.TotalDays / 12.0;
 
             sb.AppendLine($"【城市名称】{cityName}");
-            sb.AppendLine($"【时间跨度】第{h.FirstGameYear}年第{h.FirstGameMonth}月 ~ 第{h.LastGameYear}年第{h.LastGameMonth}月（共{h.TotalDays}天，约{h.LastGameYear - h.FirstGameYear + 1}年）");
-            sb.AppendLine($"【当前时点】第{c.GameYear}年第{c.GameMonth}月");
+            sb.AppendLine($"【统计时点】第{c.GameYear}年第{c.GameMonth}月");
+            sb.AppendLine($"【建市年限】逾{elapsedYears:F1}年（从第{h.FirstGameYear}年第{h.FirstGameMonth}月至当前）");
             sb.AppendLine($"【发展阶段】{GameMetricConverter.GetGameStageDescription(new StatisticSnapshot { Population = c.Population })}");
             sb.AppendLine();
 
-            sb.AppendLine("【建市以来总体变化】");
-            sb.AppendLine($"  人口：{h.FirstPopulation:N0}人 → {h.LastPopulation:N0}人（累计增长{h.PopGrowthTotal:+0.0;-0.0}%）");
-            sb.AppendLine($"  财政：₡{h.FirstMoney:N0} → ₡{h.LastMoney:N0}（累计增长{h.MoneyGrowthTotal:+0.0;-0.0}%）");
-            sb.AppendLine($"  当前人口：{c.Population:N0}人");
-            sb.AppendLine($"  当前财政余额：₡{c.Money:N0}");
-            sb.AppendLine($"  当前幸福度：{c.Happiness:F1}%");
-            sb.AppendLine($"  历史最高幸福度：{h.PeakHappiness:F1}%（第{h.PeakHappinessYear}年第{h.PeakHappinessMonth}月）");
-            sb.AppendLine($"  历史最高健康度：{h.PeakHealth:F1}%（第{h.PeakHealthYear}年第{h.PeakHealthMonth}月）");
+            sb.AppendLine("【当前核心指标】");
+            sb.AppendLine($"  常住人口：{c.Population:N0}人");
+            sb.AppendLine($"  财政余额：₡{c.Money:N0}");
+            sb.AppendLine($"  居民幸福度：{c.Happiness:F1}%（{GameMetricConverter.ToHappinessLevel(c.Happiness)}），历史峰值{h.PeakHappiness:F1}%（第{h.PeakHappinessYear}年第{h.PeakHappinessMonth}月）");
+            sb.AppendLine($"  居民健康度：{report.Social.Health:F1}%（{(report.Social.Health >= 80 ? "优秀" : report.Social.Health >= 60 ? "良好" : "需关注")}），历史峰值{h.PeakHealth:F1}%（第{h.PeakHealthYear}年第{h.PeakHealthMonth}月）");
+            sb.AppendLine($"  建市以来人口增长至{h.LastPopulation:N0}人");
             sb.AppendLine();
 
             if (st.FromStage != st.ToStage)

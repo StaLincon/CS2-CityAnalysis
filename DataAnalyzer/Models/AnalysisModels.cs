@@ -4,16 +4,16 @@ namespace DataAnalyzer.Models
 {
     public class CityAnalysisReport
     {
-        public CityOverview Overview { get; set; }
-        public DemographicAnalysis Demographics { get; set; }
-        public EconomicAnalysis Economy { get; set; }
-        public SectorAnalysis Sectors { get; set; }
-        public EmploymentAnalysis Employment { get; set; }
-        public TransportAnalysis Transport { get; set; }
-        public SocialAnalysis Social { get; set; }
-        public FiscalAnalysis Fiscal { get; set; }
-        public HouseholdAnalysis Households { get; set; }
-        public TrendSummary Trends { get; set; }
+        public CityOverview Overview { get; set; } = new();
+        public DemographicAnalysis Demographics { get; set; } = new();
+        public EconomicAnalysis Economy { get; set; } = new();
+        public SectorAnalysis Sectors { get; set; } = new();
+        public EmploymentAnalysis Employment { get; set; } = new();
+        public TransportAnalysis Transport { get; set; } = new();
+        public SocialAnalysis Social { get; set; } = new();
+        public FiscalAnalysis Fiscal { get; set; } = new();
+        public HouseholdAnalysis Households { get; set; } = new();
+        public TrendSummary Trends { get; set; } = new();
         public List<AlertItem> Alerts { get; set; } = new();
         public List<ScoreCard> Scores { get; set; } = new();
     }

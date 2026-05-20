@@ -101,7 +101,7 @@ namespace DataAnalyzer
         {
             TxtDataPath.Text = m_Config.GetEffectiveDataPath();
             TxtApiUrl.Text = m_Config.Llm.ApiUrl;
-            TxtApiKey.Text = m_Config.Llm.ApiKey;
+            TxtApiKey.Password = m_Config.Llm.ApiKey;
             CmbModel.Text = m_Config.Llm.Model;
             TxtProxyUrl.Text = m_Config.Llm.ProxyUrl;
             TxtCityName.Text = m_Config.CityName;
@@ -314,7 +314,7 @@ namespace DataAnalyzer
             var apiConfig = new ApiProviderConfig
             {
                 ProviderType = GetSelectedProviderType(),
-                ApiKey = TxtApiKey.Text,
+                ApiKey = TxtApiKey.Password,
                 ApiUrl = TxtApiUrl.Text,
                 Model = GetSelectedModel(),
                 ProxyUrl = TxtProxyUrl.Text
@@ -554,7 +554,7 @@ namespace DataAnalyzer
                 var apiConfig = new ApiProviderConfig
                 {
                     ProviderType = GetSelectedProviderType(),
-                    ApiKey = TxtApiKey.Text,
+                    ApiKey = TxtApiKey.Password,
                     ApiUrl = TxtApiUrl.Text,
                     Model = GetSelectedModel(),
                     ProxyUrl = TxtProxyUrl.Text
@@ -685,7 +685,7 @@ namespace DataAnalyzer
             var apiConfig = new ApiProviderConfig
             {
                 ProviderType = GetSelectedProviderType(),
-                ApiKey = TxtApiKey.Text,
+                ApiKey = TxtApiKey.Password,
                 ApiUrl = TxtApiUrl.Text,
                 Model = GetSelectedModel(),
                 ProxyUrl = TxtProxyUrl.Text
@@ -749,7 +749,7 @@ namespace DataAnalyzer
             m_Config.CityName = TxtCityName.Text;
             m_Config.Llm.ProviderType = CmbProvider.SelectedItem is ComboBoxItem item ? item.Content.ToString() : "OpenAI";
             m_Config.Llm.ApiUrl = TxtApiUrl.Text;
-            m_Config.Llm.ApiKey = TxtApiKey.Text;
+            m_Config.Llm.ApiKey = TxtApiKey.Password;
             m_Config.Llm.Model = GetSelectedModel();
             m_Config.Llm.ProxyUrl = TxtProxyUrl.Text;
             m_Config.SelectedSaveFolder = m_SelectedSave?.FolderPath ?? "";

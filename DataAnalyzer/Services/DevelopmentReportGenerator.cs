@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using DataAnalyzer.Models;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
@@ -32,9 +33,21 @@ namespace DataAnalyzer.Services
             m_KUpdatesPerDay = kUpdatesPerDay;
             m_CityName = cityName;
             m_OutputPath = outputPath;
-            var analysis = new CityAnalysisReport();
-            analysis.Overview = report.Overview;
-            analysis.Demographics = report.Demographics;
+            var analysis = new CityAnalysisReport
+            {
+                Overview = report.Overview,
+                Demographics = report.Demographics,
+                Economy = report.Economy,
+                Sectors = report.Sectors,
+                Employment = report.Employment,
+                Transport = report.Transport,
+                Social = report.Social,
+                Fiscal = report.Fiscal,
+                Households = report.Households,
+                Trends = report.Trends,
+                Alerts = report.Alerts,
+                Scores = report.Scores
+            };
             m_ChartRenderer = new ChartRenderer(m_History, m_Current, analysis);
         }
 
@@ -62,11 +75,6 @@ namespace DataAnalyzer.Services
             // ── 主体部分（GB/T 9704-2012 第8章）──
             // 公文标题
             body.AppendChild(CreateDocumentTitle($"关于{m_CityName}城市发展工作的报告"));
-            // 主送机关
-            body.AppendChild(CreateAddressee("各位代表："));
-
-            // ── 核心指标速览(仪表盘) ──
-            BuildDashboard(body);
 
             // ── 正文各章 ──
             BuildChapter(body, mainPart, "opening");
@@ -115,57 +123,31 @@ namespace DataAnalyzer.Services
         // ══════════════════════════════════════════════
         private void BuildDashboard(Body body)
         {
-            body.AppendChild(CreateSectionHeading("核心指标速览"));
             body.AppendChild(CreateSpacer(1));
 
             var h = m_Report.History;
-            var table = CreateStyledTable(new[] { "指标", "当前值", "建市初值", "变化幅度", "评估" });
+            var elapsedYears = h.TotalDays / 12.0;
 
-            // 人口
-            var popChange = h.PopGrowthTotal;
-            AddTableRow(table, new[] {
-                "常住人口", $"{m_Current.Population:N0}人", $"{h.FirstPopulation:N0}人",
-                $"{popChange:+0.0;-0.0}%",
-                popChange > 50 ? "高速增长" : popChange > 10 ? "稳步增长" : popChange > 0 ? "缓慢增长" : "人口下降"
-            });
+            var sb = new StringBuilder();
+            sb.AppendLine($"截至第{m_Current.GameYear}年第{m_Current.GameMonth}月，{m_CityName}建市已逾{elapsedYears:F1}年。");
+            sb.AppendLine();
 
-            // 财政
-            var moneyChange = h.MoneyGrowthTotal;
-            AddTableRow(table, new[] {
-                "财政余额", $"₡{m_Current.Money:N0}", $"₡{h.FirstMoney:N0}",
-                $"{moneyChange:+0.0;-0.0}%",
-                moneyChange > 100 ? "财力雄厚" : moneyChange > 0 ? "收支平稳" : "财力缩减"
-            }, alt: true);
+            sb.AppendLine($"全市常住人口{m_Current.Population:N0}人，居民幸福度{m_Current.Wellbeing:F1}%（{GameMetricConverter.ToHappinessLevel(m_Current.Wellbeing)}），健康度{m_Current.Health:F1}%（{(m_Current.Health >= 80 ? "优秀" : m_Current.Health >= 60 ? "良好" : "需关注")}）。");
+            
+            if (m_Current.Money > 0)
+                sb.AppendLine($"财政余额₡{m_Current.Money:N0}，{(h.MoneyGrowthTotal > 0 ? "财政状况稳健" : "财政压力较大")}。");
 
-            // 幸福度
-            var currentHappiness = m_Current.Wellbeing;
-            var hapDiff = currentHappiness - h.PeakHappiness;
-            AddTableRow(table, new[] {
-                "居民幸福度", $"{currentHappiness:F1}%", $"{h.PeakHappiness:F1}%（峰值）",
-                hapDiff >= 0 ? "历史最高" : $"{hapDiff:F1}pp",
-                GameMetricConverter.ToHappinessLevel(currentHappiness)
-            });
+            if (m_Current.CrimeRate > 0)
+                sb.AppendLine($"社会治安方面，犯罪率{m_Current.CrimeRate:F1}%，{GameMetricConverter.ToCrimeDescription(m_Current.CrimeRate)}。");
 
-            // 健康度
-            var currentHealth = m_Current.Health;
-            AddTableRow(table, new[] {
-                "居民健康度", $"{currentHealth:F1}%", $"{h.PeakHealth:F1}%（峰值）",
-                $"{currentHealth - h.PeakHealth:+0.0;-0.0}pp",
-                currentHealth >= 80 ? "优秀" : currentHealth >= 60 ? "良好" : "需关注"
-            }, alt: true);
+            if (m_Current.HomelessCount > 0 && m_Current.Population > 0)
+            {
+                var homelessPct = (double)m_Current.HomelessCount / m_Current.Population * 100;
+                sb.AppendLine($"住房保障方面，无家可归者{m_Current.HomelessCount:N0}人（占人口{homelessPct:F2}%），{(homelessPct > 1 ? "住房问题较为突出" : "住房保障基本到位")}。");
+            }
 
-            // 数据概况
-            AddTableRow(table, new[] {
-                "数据跨度", $"{h.TotalDays}天", $"{h.DataPoints}个数据点",
-                $"K={m_KUpdatesPerDay}",
-                h.DataPoints > 100 ? "数据详实" : "数据有限"
-            });
-
-            body.AppendChild(table);
+            body.AppendChild(CreateBodyParagraph(sb.ToString()));
             body.AppendChild(CreateSpacer(1));
-            body.AppendChild(CreateBodyParagraph(
-                $"截至第{m_Current.GameYear}年第{m_Current.GameMonth}月，{m_CityName}已走过{h.TotalDays}个游戏日的发展历程，" +
-                $"城市基础设施日趋完善，各项社会事业稳步推进。"));
             body.AppendChild(CreatePageBreak());
         }
 
@@ -239,7 +221,7 @@ namespace DataAnalyzer.Services
                     body.AppendChild(new Paragraph(new Run(ImageHelper.CreateDrawing(imageId, title))));
                 }
             }
-            catch { body.AppendChild(CreateBodyParagraph("（图表生成失败）")); }
+            catch (Exception ex) { body.AppendChild(CreateBodyParagraph($"（图表生成失败：{ex.Message}）")); }
             body.AppendChild(CreateSpacer(1));
         }
 

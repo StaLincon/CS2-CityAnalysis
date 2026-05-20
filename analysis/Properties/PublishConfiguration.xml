@@ -1,25 +1,43 @@
-﻿<Publish>
+<Publish>
 	<!--Id must be set in order to update existed mod. it is not required for publishing mod for the first time-->
-	<ModId Value="" />
+	<ModId Value="144817" />
 	<!--Name of the mod to display to players-->
-	<DisplayName Value="analysis" />
+	<DisplayName Value="城市数据分析 — City Data Analysis" />
 	<!--Short description of the mod-->
-	<ShortDescription Value="This is a short description" />
+	<ShortDescription Value="采集城市统计数据，配合桌面应用生成政府工作报告" />
 	<!--Long description of the mod. Single line or multi line. Supports minimal markdown subset-->
-	<!--LongDescription Value="This is a long description" /-->
 	<LongDescription>
-This is a long description
+本模组自动采集城市运行数据（人口、经济、交通、教育等70+项指标），配合桌面端分析工具生成专业的政府工作报告。
+
+**功能特点：**
+- 自动定时采集城市统计数据，覆盖人口、财政、幸福度、交通、产业等维度
+- 按城市存档独立存储，切换存档自动创建新数据目录
+- 支持手动导出当前数据快照
+
+**配套分析工具（单独下载）：**
+- 双模板报告：模板A《城市发展工作报告》（建市以来全历程）、模板B《城市季度运行分析报告》（同比+环比）
+- 自动生成多维度统计图表
+- 支持6种AI接入（OpenAI / DeepSeek / SiliconFlow / Ollama / Azure / 自定义）
+- 输出标准Word文档，红头文件格式
+
+**使用方法：**
+1. 订阅本模组
+2. 游戏内进入 选项 > City Analysis
+3. 点击"Export City Data"导出数据
+4. 下载分析工具生成报告
+
+**下载分析工具：** https://github.com/StaLincon/CS2-CityAnalysis
 	</LongDescription>
 	<!--Thumbnail-->
 	<Thumbnail Value="Properties/Thumbnail.png" />
 	<!--Screenshot, can be set multiple times-->
 	<Screenshot Value="" />
 	<!--Tag, can be set multiple times-->
-	<Tag Value="" />
+	<Tag Value="Code Mod" />
 	<!--Link to the forum post where the mod can be discussed-->
 	<ForumLink Value="" />
 	<!--Version of the mod-->
-	<ModVersion Value="1.0" />
+	<ModVersion Value="1.0.0" />
 	<!--Recommended version of the base game to use the mod-->
 	<GameVersion Value="1.0.*" />
 	<!--Dependency for the mod, can be set multiple times-->
@@ -27,11 +45,9 @@ This is a long description
 	<!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
 	<RequiredDLC Value="" />
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
-	<ChangeLog Value="" />
-	<!--<ChangeLog>
-	</ChangeLog>-->
+	<ChangeLog Value="Initial release - basic data collection and export functionality" />
 	<!--External link, can be set multiple times. supported types are "discord", "github", "youtube", "twitch", "x", "paypal", "patreon", "buymeacoffee", "kofi", "crowdin", "gitlab", "gofundme"-->
-	<ExternalLink Type="" Url="" />
+	<ExternalLink Type="github" Url="https://github.com/StaLincon/CS2-CityAnalysis" />
 	<!--Supported values Public, Private, Unlisted-->
 	<AccessLevel Value="Public" />
 </Publish>

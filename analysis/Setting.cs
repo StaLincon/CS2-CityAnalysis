@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Colossal;
 using Colossal.IO.AssetDatabase;
 using Game.Modding;
@@ -9,22 +9,21 @@ using Game.UI.Widgets;
 namespace analysis
 {
     [FileLocation(nameof(analysis))]
-    [SettingsUIGroupOrder(kButtonGroup, kMainGroup)]
-    [SettingsUIShowGroupName(kButtonGroup, kMainGroup)]
+    [SettingsUIGroupOrder(kMainGroup)]
+    [SettingsUIShowGroupName(kMainGroup)]
     public class Setting : ModSetting
     {
         public const string kMainGroup = "Main";
-        public const string kButtonGroup = "Export";
+
+        private ToolDownloader m_Downloader;
 
         public Setting(IMod mod) : base(mod)
         {
+            m_Downloader = new ToolDownloader();
         }
 
-        [SettingsUISection(kMainGroup, kMainGroup)]
-        public bool ExportData { get; set; }
-
         [SettingsUIButton]
-        [SettingsUISection(kButtonGroup, kButtonGroup)]
+        [SettingsUISection(kMainGroup, kMainGroup)]
         public bool ExportButton
         {
             set
@@ -33,9 +32,18 @@ namespace analysis
             }
         }
 
+        [SettingsUIButton]
+        [SettingsUISection(kMainGroup, kMainGroup)]
+        public bool DownloadToolButton
+        {
+            set
+            {
+                m_Downloader.OpenDownloadPage();
+            }
+        }
+
         public override void SetDefaults()
         {
-            ExportData = false;
         }
     }
 
@@ -51,12 +59,15 @@ namespace analysis
         {
             return new Dictionary<string, string>
             {
-                { m_Setting.GetSettingsLocaleID(), "City Analysis Data" },
-                { m_Setting.GetOptionTabLocaleID(Setting.kMainGroup), "Main" },
-
-                { m_Setting.GetOptionGroupLocaleID(Setting.kButtonGroup), "Data Export" },
+                { m_Setting.GetSettingsLocaleID(), "City Analysis" },
+                { m_Setting.GetOptionTabLocaleID(Setting.kMainGroup), "Tools" },
+                { m_Setting.GetOptionGroupLocaleID(Setting.kMainGroup), "City Analysis Tools" },
+                
                 { m_Setting.GetOptionLabelLocaleID(nameof(Setting.ExportButton)), "Export City Data" },
-                { m_Setting.GetOptionDescLocaleID(nameof(Setting.ExportButton)), "Export all city statistics and full history to data files" },
+                { m_Setting.GetOptionDescLocaleID(nameof(Setting.ExportButton)), "Export city statistics and history data" },
+                
+                { m_Setting.GetOptionLabelLocaleID(nameof(Setting.DownloadToolButton)), "Download Analysis Tool" },
+                { m_Setting.GetOptionDescLocaleID(nameof(Setting.DownloadToolButton)), "Get the tool to generate government reports" },
             };
         }
 
