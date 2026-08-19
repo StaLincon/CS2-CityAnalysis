@@ -123,8 +123,28 @@
     chapters.forEach(c => chapterMap[c.id] = c.content || '');
 
     const children = [];
-    // 版头标题
-    children.push(new docx.Paragraph({ alignment: docx.AlignmentType.CENTER, spacing: { before: 200, after: 80 }, children: [run(`关于${cityName}政府工作的报告`, { bold: false, size: 44, font: '方正小标宋简体' })] }));
+    const now = new Date();
+    // ── 红头：发文机关标志（红色小标宋大字，红头文件核心）──
+    children.push(new docx.Paragraph({
+      alignment: docx.AlignmentType.CENTER,
+      spacing: { before: 200, after: 120 },
+      children: [run(`${cityName}人民政府文件`, { size: 52, font: '方正小标宋简体', color: 'EE1C25' })],
+    }));
+    // ── 发文字号（仿宋三号，居中，位于红色反线上方）──
+    children.push(new docx.Paragraph({
+      alignment: docx.AlignmentType.CENTER,
+      spacing: { before: 60, after: 160 },
+      children: [run(`${cityName.replace(/市$/, '')}政发〔${now.getFullYear()}〕1号`, { size: 32, font: '仿宋_GB2312' })],
+    }));
+    // ── 红色反线（红头与正文分隔线）──
+    children.push(new docx.Paragraph({
+      spacing: { after: 260 },
+      border: { bottom: { style: docx.BorderStyle.SINGLE, size: 12, color: 'EE1C25', space: 1 } },
+      children: [run('', {})],
+    }));
+    // 公文标题（2号小标宋，居中）
+    children.push(new docx.Paragraph({ alignment: docx.AlignmentType.CENTER, spacing: { before: 200, after: 160 }, children: [run(`关于${cityName}政府工作的报告`, { bold: false, size: 44, font: '方正小标宋简体' })] }));
+    // 主送机关（顶格）
     children.push(para('各位代表：', { alignment: docx.AlignmentType.LEFT, after: 120 }));
 
     const pushChapter = (id, extra) => {
@@ -185,7 +205,6 @@
 
     // 发文机关署名 + 日期
     children.push(para(`${cityName}人民政府`, { alignment: docx.AlignmentType.RIGHT, after: 0 }));
-    const now = new Date();
     children.push(para(`${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`, { alignment: docx.AlignmentType.RIGHT, after: 200 }));
 
     // 综合评分卡
@@ -220,6 +239,11 @@
       rows.push([`${rows.length + 1}`, '生活质量指数', `${A_.n1(s.qualityOfLifeIndex)}`, '/100', qualityGrade(s.qualityOfLifeIndex)]);
       children.push(makeTable(['序号', '指标名称', '数值', '单位', '状态'], rows));
     }
+
+    // ── 版记（抄送 + 印发机关，黑色分隔线）──
+    children.push(new docx.Paragraph({ spacing: { before: 480 }, border: { top: { style: docx.BorderStyle.SINGLE, size: 8, color: '000000', space: 1 } }, children: [run('', {})] }));
+    children.push(para('抄送：市委办公室，市人大常委会办公室，市政协办公室，市中级人民法院。', { size: 28, font: '仿宋_GB2312', after: 40 }));
+    children.push(para(`${cityName}人民政府办公室　${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日印发`, { size: 28, font: '仿宋_GB2312', after: 0 }));
 
     const doc = new docx.Document({
       creator: 'CS2 City Analysis (Web)',
