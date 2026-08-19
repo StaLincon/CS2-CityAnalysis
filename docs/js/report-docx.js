@@ -20,7 +20,7 @@
 
   function run(text, o) {
     o = o || {};
-    return new (D().TextRun)({ text: text || '', font: o.font || '宋体', size: o.size || 21, bold: !!o.bold, color: o.color });
+    return new (D().TextRun)({ text: text || '', font: o.font || '仿宋_GB2312', size: o.size || 32, bold: !!o.bold, color: o.color });
   }
   function para(text, o) {
     o = o || {};
@@ -28,12 +28,21 @@
       children: [run(text || '', o)],
       alignment: o.alignment || D().AlignmentType.JUSTIFIED,
       spacing: { line: o.line || 320, after: o.after != null ? o.after : 120 },
+      indent: o.firstIndent ? { firstLine: o.firstIndent } : undefined,
     });
   }
   function heading(text) {
     return new (D().Paragraph)({
-      children: [run(text || '', { bold: true, size: 28, font: '黑体' })],
+      children: [run(text || '', { bold: false, size: 32, font: '黑体' })],
       spacing: { before: 240, after: 160 },
+      indent: { firstLine: 640 },
+    });
+  }
+  function subHeading(text) {
+    return new (D().Paragraph)({
+      children: [run(text || '', { bold: false, size: 32, font: '楷体_GB2312' })],
+      spacing: { before: 200, after: 140 },
+      indent: { firstLine: 640 },
     });
   }
 
@@ -86,13 +95,18 @@
     if (!text || text.length > 30) return false;
     return /^[一二三四五六七八九十]、/.test(text);
   }
+  function isSubSectionMarker(text) {
+    if (!text || text.length > 30) return false;
+    return /^（[一二三四五六七八九十]）/.test(text) || /^\([一二三四五六七八九十]\)/.test(text);
+  }
 
   function renderChapterContent(content) {
     const blocks = (content || '').split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
     const out = [];
     blocks.forEach(b => {
-      if (isSectionMarker(b)) out.push(heading(b));
-      else out.push(para(b));
+      if (isSubSectionMarker(b)) out.push(subHeading(b));
+      else if (isSectionMarker(b)) out.push(heading(b));
+      else out.push(para(b, { firstIndent: 640 }));
     });
     return out;
   }
@@ -110,7 +124,7 @@
 
     const children = [];
     // 版头标题
-    children.push(new docx.Paragraph({ alignment: docx.AlignmentType.CENTER, spacing: { before: 200, after: 80 }, children: [run(`关于${cityName}政府工作的报告`, { bold: true, size: 36, font: '黑体' })] }));
+    children.push(new docx.Paragraph({ alignment: docx.AlignmentType.CENTER, spacing: { before: 200, after: 80 }, children: [run(`关于${cityName}政府工作的报告`, { bold: false, size: 44, font: '方正小标宋简体' })] }));
     children.push(para('各位代表：', { alignment: docx.AlignmentType.LEFT, after: 120 }));
 
     const pushChapter = (id, extra) => {
@@ -154,8 +168,11 @@
     // 财政 + 表3
     {
       const f = analysis.fiscal, e = analysis.economy;
+      const revExpRow = f.expenseAvailable
+        ? ['收支比', `${A_.n1(f.revenueExpenseRatio)}`, f.revenueExpenseRatio >= 1 ? '盈余' : '赤字']
+        : ['收支比', '—', '支出数据缺失'];
       const rows = [
-        ['收支比', `${A_.n1(f.revenueExpenseRatio)}`, f.revenueExpenseRatio >= 1 ? '盈余' : '赤字'],
+        revExpRow,
         ['税收依赖度', `${A_.n1(f.taxToIncomeRatio)}%`, f.taxToIncomeRatio > 80 ? '高度依赖' : '健康'],
         ['贸易依赖度', `${A_.n1(f.tradeToIncomeRatio)}%`, '贸易收入占总收入比重'],
         ['人均收入', `₡${A_.n1(e.perCapitaIncome)}`, '每位居民平均贡献'],
@@ -178,7 +195,7 @@
       children.push(makeTable(['类别', '指标', '得分', '等级', '说明'], rows));
       const avg = analysis.scores.reduce((a, s) => a + s.score, 0) / analysis.scores.length;
       const grade = avg >= 80 ? 'A（优秀）' : avg >= 65 ? 'B（良好）' : avg >= 50 ? 'C（合格）' : avg >= 35 ? 'D（待改善）' : 'F（不合格）';
-      children.push(para(`综合评分：${A_.n1(avg)}分，总体等级：${grade}。${avg >= 65 ? '城市发展状况良好，各项指标处于健康水平。' : '城市发展存在一定问题，建议重点关注低分领域。'}`, { after: 200 }));
+      children.push(para(`综合评分：${A_.n1(avg)}分，总体等级：${grade}。${avg >= 65 ? '城市发展状况良好，各项指标处于健康水平。' : '城市发展存在一定问题，建议重点关注低分领域。'}`, { after: 200, firstIndent: 640 }));
       children.push(new docx.Paragraph({ children: [new docx.PageBreak()] }));
     }
 
@@ -207,7 +224,7 @@
     const doc = new docx.Document({
       creator: 'CS2 City Analysis (Web)',
       title: `关于${cityName}政府工作的报告`,
-      styles: { default: { document: { run: { font: '宋体', size: 21 } } } },
+      styles: { default: { document: { run: { font: '仿宋_GB2312', size: 32 } } } },
       sections: [{ children }],
     });
     return await docx.Packer.toBlob(doc);

@@ -147,7 +147,10 @@
     const gm = P('GameMonth'), gy = P('GameYear'), gd = P('GameDay');
     const hasValidTime = gm.length === count && new Set(gm).size > 1;
     const arr = (k) => P(k);
-    const val = (list, i) => (list && i < list.length) ? list[i] : 0;
+    const val = (list, i) => {
+      if (!list || !list.length) return 0;
+      return i < list.length ? list[i] : list[list.length - 1];
+    };
     const snaps = [];
     for (let i = 0; i < count; i++) {
       let gameYear, gameMonth, gameDay;
@@ -293,9 +296,10 @@
       naturalGrowth: Math.round((current.birthRatePerMille - current.deathRatePerMille) * 10) / 10, adultsCount: current.adultsCount, adultsRatio: current.adultsRatio,
     };
 
+    const expenseAvail = current.expense > 0.01;
     const economy = {
       money: current.money, income: current.income, expense: current.expense,
-      netIncome: current.income - current.expense,
+      netIncome: expenseAvail ? current.income - current.expense : null,
       profitMargin: current.income > 0 ? (current.income - current.expense) / current.income * 100 : 0,
       trade: current.trade, devTreePoints: current.devTreePoints,
       perCapitaIncome: pop > 0 ? current.income / pop : 0,
@@ -360,11 +364,13 @@
       qualityOfLifeIndex: Math.round(Math.max(0, Math.min(qoL, 100)) * 10) / 10,
     };
 
-    const ratio = current.expense > 0 ? current.income / current.expense : 100;
-    let fiscalStatus = ratio >= 1.5 ? 'Highly Surplus' : ratio >= 1.1 ? 'Surplus' : ratio >= 1.0 ? 'Balanced' :
+    const ratio = expenseAvail ? (current.income > 0 ? current.income / current.expense : 100) : null;
+    let fiscalStatus = !expenseAvail ? 'Data Missing' :
+      ratio >= 1.5 ? 'Highly Surplus' : ratio >= 1.1 ? 'Surplus' : ratio >= 1.0 ? 'Balanced' :
       ratio >= 0.9 ? 'Mild Deficit' : ratio >= 0.7 ? 'Deficit' : 'Severe Deficit';
     const fiscal = {
-      revenueExpenseRatio: Math.round(ratio * 100) / 100,
+      revenueExpenseRatio: ratio != null ? Math.round(ratio * 100) / 100 : null,
+      expenseAvailable: expenseAvail,
       taxToIncomeRatio: current.income > 0 ? Math.round(totalTax / current.income * 100 * 10) / 10 : 0,
       tradeToIncomeRatio: current.income > 0 ? Math.round(current.trade / current.income * 100 * 10) / 10 : 0,
       fiscalStatus,
@@ -403,7 +409,7 @@
     const clamp = (v) => Math.max(0, Math.min(v, 100));
     const score = (cat, name, s, desc) => ({ category: cat, name, score: Math.round(clamp(s) * 10) / 10, grade: s >= 80 ? 'A' : s >= 65 ? 'B' : s >= 50 ? 'C' : s >= 35 ? 'D' : 'F', description: desc });
     const scores = [
-      score('Economy', 'Budget Health', current.expense > 0 ? Math.min(current.income / current.expense * 50, 100) : 100, '收入支出比'),
+      score('Economy', 'Budget Health', expenseAvail ? Math.min(current.income / current.expense * 50, 100) : 50, expenseAvail ? '收入支出比' : '支出数据缺失'),
       score('Economy', 'Growth Momentum', Math.max(0, Math.min(growth(s => s.population) + 50, 100)), '人口增长趋势'),
       score('Society', 'Wellbeing', Math.min(current.wellbeing, 100), '市民幸福水平'),
       score('Society', 'Public Health', Math.min(current.health, 100), '市民健康水平'),
@@ -413,8 +419,11 @@
       score('Living', 'Housing', Math.max(0, 100 - (pop > 0 ? current.homelessCount / pop * 2000 : 0)), '无家可归越低分越高'),
     ];
 
+    const fiscalTxt = economy.netIncome != null
+      ? (economy.netIncome >= 0 ? `月盈余 ${yuan(economy.netIncome)}` : `月赤字 ${yuan(-economy.netIncome)}`)
+      : '财政支出数据缺失';
     overview.summary = `${n0(pop)} 居民 | 第${current.gameYear}年${current.gameMonth}月 | ` +
-      (economy.netIncome >= 0 ? `月盈余 ${yuan(economy.netIncome)}` : `月赤字 ${yuan(-economy.netIncome)}`) + ` | QoL ${n1(social.qualityOfLifeIndex)}/100 | ` +
+      fiscalTxt + ` | QoL ${n1(social.qualityOfLifeIndex)}/100 | ` +
       (alerts.some(a => a.level === 'danger') ? `⚠ ${alerts.filter(a => a.level === 'danger').length} 项严重问题` :
         alerts.some(a => a.level === 'warning') ? `⚡ ${alerts.filter(a => a.level === 'warning').length} 项警告` : '各项指标正常');
 
@@ -463,13 +472,21 @@
 
     lines.push('【财政数据】');
     lines.push(`  月收入：${yuan(e.income)}`);
-    lines.push(`  月支出：${yuan(e.expense)}`);
-    lines.push(`  净收入：${yuan(e.netIncome)}（利润率${e.profitMargin >= 0 ? '+' : ''}${n1(e.profitMargin)}%）`);
+    if (f.expenseAvailable) {
+      lines.push(`  月支出：${yuan(e.expense)}`);
+      lines.push(`  净收入：${yuan(e.netIncome)}（利润率${e.profitMargin >= 0 ? '+' : ''}${n1(e.profitMargin)}%）`);
+    } else {
+      lines.push(`  财政支出：本统计期尚未记录（数据采集未覆盖支出项，无法计算净收入与收支比）`);
+    }
     ap('贸易额', e.trade, v => yuan(v));
     ap('发展点数', e.devTreePoints, v => `${n0(v)}`);
     lines.push(`  人均收入：${yuan(e.perCapitaIncome)}  人均支出：${yuan(e.perCapitaExpense)}`);
     ap('人均税赋', e.perCapitaTax, v => yuan(v));
-    lines.push(`  收支比：${n1(f.revenueExpenseRatio)}（${Desc.budget(f.revenueExpenseRatio)}）`);
+    if (f.expenseAvailable) {
+      lines.push(`  收支比：${n1(f.revenueExpenseRatio)}（${Desc.budget(f.revenueExpenseRatio)}）`);
+    } else {
+      lines.push(`  收支比：支出数据缺失，暂不计算`);
+    }
     lines.push(`  税收依赖度：${n1(f.taxToIncomeRatio)}%  贸易依赖度：${n1(f.tradeToIncomeRatio)}%`);
     lines.push('');
 
