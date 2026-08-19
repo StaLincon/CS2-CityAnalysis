@@ -1,0 +1,7 @@
+# 本地诊断残留，不部署到公开仓库
+_diag/
+
+# 系统/编辑器
+.DS_Store
+Thumbs.db
+*.log

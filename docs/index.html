@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CS2 城市数据分析 · 在线报告生成器</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <h1>🏙️ 都市天际线 II · 城市数据分析在线报告生成器</h1>
+      <p class="subtitle">上传 Mod 导出的城市数据 → 填入 API Key → 浏览器内调用 AI 生成《政府工作报告》→ 在线预览 / 下载 Word。
+        <strong>全部在浏览器内运行，数据不上传任何服务器。</strong></p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- 1. 数据 -->
+    <section class="card">
+      <h2>① 上传数据</h2>
+      <p class="hint">支持 Mod 导出的 <code>history.json</code>（时间序列）、<code>current_snapshot.json</code>（当前快照）、<code>full_history.json</code>（完整历史），可多选。也可直接加载示例数据体验。</p>
+      <div class="row">
+        <label class="btn file-btn">
+          选择 JSON 文件
+          <input type="file" id="fileInput" accept=".json,application/json" multiple hidden />
+        </label>
+        <button class="btn ghost" id="demoBtn">加载示例数据</button>
+        <span id="dataStatus" class="status"></span>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <label class="field">城市名称
+          <input type="text" id="cityName" value="示范市" />
+        </label>
+      </div>
+      <div id="dataSummary" class="summary" hidden></div>
+    </section>
+
+    <!-- 2. API -->
+    <section class="card">
+      <h2>② 配置 AI 接口</h2>
+      <p class="hint">采用标准 OpenAI 兼容协议。<b>最省事：把「服务商」选成 SiliconFlow（硅基流动）</b>——它浏览器直连免代理（返回 <code>Access-Control-Allow-Origin: *</code>），粘贴对应 Key 即可，无需部署任何东西，且可直接选用 DeepSeek 系列模型。DeepSeek 直连现在也已支持 CORS，但若你是<b>双击本地文件(file://)打开本页</b>，个别浏览器仍可能拦截，此时改用 SiliconFlow 或把页面部署到 GitHub Pages / 用本地服务打开即可。</p>
+      <div class="notice">
+        <span class="ico">🔒</span>
+        <div>隐私保障：你填写的 <b>API Key 仅保存在本浏览器内存中</b>，只会发往你填写的 AI 接口地址（如 DeepSeek / OpenAI），<b>绝不会上传到任何第三方服务器</b>；本应用不含任何数据统计或遥测，城市数据也仅在本地解析、仅随请求发往你选择的模型。<br><span class="warn">⚠️ 若填写 CORS 代理，请求（含 Key）将经过该代理服务器，请仅使用你自建或完全信任的代理。</span></div>
+      </div>
+      <div class="grid">
+        <label class="field">服务商
+          <select id="provider">
+            <option value="deepseek">DeepSeek</option>
+            <option value="openai">OpenAI</option>
+            <option value="siliconflow">SiliconFlow（硅基流动）· 推荐免代理</option>
+            <option value="ollama">Ollama（本地）</option>
+            <option value="custom">自定义 / 兼容端点</option>
+          </select>
+        </label>
+        <label class="field">API 地址
+          <input type="text" id="apiUrl" placeholder="https://api.deepseek.com/v1/chat/completions" />
+        </label>
+        <label class="field">模型名
+          <input type="text" id="model" placeholder="deepseek-v4-flash" />
+        </label>
+        <label class="field">API Key
+          <input type="password" id="apiKey" placeholder="sk-..." autocomplete="off" />
+        </label>
+        <label class="field wide">CORS 代理（可选；仅当你坚持用 DeepSeek 且以 file:// 双击打开本页时才可能需要，推荐改用 SiliconFlow 免代理）
+          <input type="text" id="proxy" placeholder="留空即可（推荐用 SiliconFlow，免代理）" />
+        </label>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn ghost" id="testBtn">测试连接</button>
+        <span id="testStatus" class="status"></span>
+      </div>
+    </section>
+
+    <!-- 3. 生成 -->
+    <section class="card">
+      <h2>③ 生成报告</h2>
+      <div class="row">
+        <button class="btn primary" id="genBtn">🚀 生成政府工作报告</button>
+        <span id="genStatus" class="status"></span>
+      </div>
+      <div id="progress" class="progress" hidden></div>
+    </section>
+
+    <!-- 4. 预览 -->
+    <section class="card" id="previewCard" hidden>
+      <div class="preview-toolbar">
+        <h2 style="margin:0">④ 报告预览</h2>
+        <div class="row" style="margin:0">
+          <button class="btn" id="downloadWord">⬇ 下载 Word (.docx)</button>
+        </div>
+      </div>
+      <article id="report" class="report"></article>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>纯前端静态应用 · 可免费部署于 GitHub Pages · 数据与密钥仅存于你的浏览器</p>
+    </div>
+  </footer>
+
+  <script src="vendor/chart.umd.js"></script>
+  <script src="vendor/docx.umd.js"></script>
+  <script src="js/analysis.js"></script>
+  <script src="js/llm.js"></script>
+  <script src="js/report-docx.js"></script>
+  <script src="js/sample-data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>

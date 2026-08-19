@@ -1,0 +1,298 @@
+/* ============================================================
+   Neumorphism (新拟物派) 设计系统 — CS2 城市报告生成器
+   规则来源：STYLEKIT_STYLE_REFERENCE / neumorphism
+   - 背景统一浅灰 #e0e5ec，元素与背景同色系
+   - 双光源阴影：左上亮(#ffffff) / 右下暗(#b8bcc2)
+   - 凸起=默认，凹陷=按下/输入框
+   - 按钮 hover 阴影缩小，active 转 inset（禁止 translate）
+   - 输入框 focus 时内阴影变浅（惰性收缩）
+   - 圆角 rounded-xl/2xl，过渡 duration-300 ease-in-out
+   ============================================================ */
+
+:root {
+  --bg: #e0e5ec;
+  --surface: #e0e5ec;
+  --surface-alt: #f0f0f3;
+  --paper: #fbfbfd;            /* 报告纸面：近白非纯白 */
+  --shadow-dark: #b8bcc2;
+  --shadow-light: #ffffff;
+  --text: #333333;            /* 主文字 */
+  --text-muted: #6b7280;      /* 次要文字 */
+  --text-weak: #9aa3b2;       /* 弱化文字 */
+  --primary: #6d5dfc;         /* 强调色 */
+  --primary-d: #5b4fe0;
+  --primary-l: #8a7dff;
+  --ok: #2f9e6f;
+  --err: #d9726f;
+
+  --r-sm: 12px;   /* rounded-xl */
+  --r-md: 16px;   /* rounded-2xl */
+  --r-lg: 20px;
+
+  --sh-out: 8px 8px 16px #b8bcc2, -8px -8px 16px #ffffff;
+  --sh-out-md: 6px 6px 12px #b8bcc2, -6px -6px 12px #ffffff;  /* 按钮默认凸起 */
+  --sh-out-sm: 4px 4px 8px #b8bcc2, -4px -4px 8px #ffffff;     /* 按钮 hover 缩小 */
+  --sh-out-lg: 12px 12px 24px #b8bcc2, -12px -12px 24px #ffffff;
+  --sh-in: inset 6px 6px 12px #b8bcc2, inset -6px -6px 12px #ffffff;
+  --sh-in-sm: inset 4px 4px 8px #b8bcc2, inset -4px -4px 8px #ffffff;
+  --sh-in-deep: inset 2px 2px 4px #b8bcc2, inset -2px -2px 4px #ffffff;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Microsoft YaHei", "PingFang SC", system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+
+/* ── 顶部 ─────────────────────────────────────────────── */
+.site-header {
+  background: var(--bg);
+  padding: 34px 0 26px;
+}
+.site-header h1 {
+  margin: 0 0 10px;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: .5px;
+}
+.subtitle {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  max-width: 880px;
+  line-height: 1.7;
+}
+.subtitle strong { color: var(--primary-d); font-weight: 600; }
+
+main { padding: 18px 0 60px; }
+
+/* ── 卡片（凸起） ─────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-out);
+  padding: 24px 26px;
+  margin-bottom: 22px;
+  transition: box-shadow .3s ease-in-out;
+}
+.card h2 {
+  margin: 0 0 14px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hint { color: var(--text-muted); font-size: 13px; margin: 0 0 16px; line-height: 1.7; }
+
+/* 隐私 / 安全提示（凹陷面板） */
+.notice {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: var(--surface);
+  border-radius: var(--r-sm);
+  box-shadow: var(--sh-in);
+  padding: 12px 14px;
+  font-size: 12.5px; color: var(--text-muted);
+  line-height: 1.65; margin-bottom: 16px;
+}
+.notice .ico { font-size: 16px; line-height: 1.3; flex-shrink: 0; }
+.notice b { color: var(--text); font-weight: 600; }
+.notice .warn { color: var(--err); }
+code {
+  background: var(--surface);
+  box-shadow: var(--sh-in-sm);
+  padding: 2px 7px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ── 布局工具 ─────────────────────────────────────────── */
+.row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.field {
+  display: flex; flex-direction: column; gap: 7px;
+  font-size: 13px; color: var(--text-muted); flex: 1; min-width: 0;
+}
+.field.wide { grid-column: 1 / -1; }
+
+/* 输入框 / 下拉（凹陷，focus 时内阴影变浅） */
+.field input, .field select {
+  background: var(--surface);
+  border: 0;
+  color: var(--text);
+  padding: 11px 14px;
+  border-radius: var(--r-sm);
+  font-size: 14px;
+  outline: none;
+  box-shadow: var(--sh-in);
+  transition: box-shadow .3s ease-in-out;
+  width: 100%;
+}
+.field input:focus, .field select:focus {
+  box-shadow: var(--sh-in-deep);
+}
+.field input::placeholder, .field select::placeholder { color: var(--text-weak); }
+
+/* ── 按钮（凸起 → hover 缩小 → active 凹陷） ──────────── */
+.btn {
+  background: var(--surface);
+  color: var(--text);
+  border: 0;
+  padding: 11px 18px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: var(--sh-out-md);                            /* 默认：凸起 */
+  transition: box-shadow .3s ease-in-out, color .3s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.btn:hover { box-shadow: var(--sh-out-sm); }               /* hover：阴影缩小（手指靠近遮光） */
+.btn:active { box-shadow: var(--sh-in-sm); }              /* active：从凸起转凹陷，禁止 translate */
+.btn:focus-visible { outline: 2px solid var(--primary-l); outline-offset: 2px; }
+
+/* 主操作：紫色填充 CTA（仍遵循 双光源 + hover 缩小 + active 凹陷） */
+.btn.primary, .file-btn {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 6px 6px 12px #b8bcc2, -6px -6px 12px #ffffff;
+}
+.btn.primary:hover, .file-btn:hover { box-shadow: 4px 4px 8px #b8bcc2, -4px -4px 8px #ffffff; }
+.btn.primary:active, .file-btn:active {
+  box-shadow: inset 4px 4px 8px rgba(79,70,229,.45), inset -4px -4px 8px rgba(140,130,255,.35);
+}
+.btn.ghost { background: var(--surface); color: var(--text-muted); }
+
+.status { font-size: 13px; color: var(--text-muted); }
+.status.ok { color: var(--ok); }
+.status.err { color: var(--err); }
+
+/* ── 数据摘要（凹陷面板） ─────────────────────────────── */
+.summary {
+  margin-top: 16px;
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--r-sm);
+  box-shadow: var(--sh-in);
+  padding: 16px 18px;
+}
+.summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 10px; }
+.summary-grid div {
+  background: var(--surface);
+  border-radius: var(--r-sm);
+  box-shadow: var(--sh-out-sm);
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--text);
+}
+.summary-grid b { color: var(--text-muted); font-weight: 400; font-size: 12px; display: block; margin-bottom: 2px; }
+.src-list { margin: 6px 0 0; padding-left: 18px; font-size: 12px; color: var(--text-muted); }
+
+/* ── 进度（凹陷面板 + 凸起条目） ─────────────────────── */
+.progress {
+  margin-top: 14px;
+  display: flex; flex-direction: column; gap: 8px;
+  max-height: 280px; overflow: auto;
+  background: var(--surface);
+  border-radius: var(--r-sm);
+  box-shadow: var(--sh-in);
+  padding: 14px 16px;
+}
+.prog-item {
+  font-size: 13px; padding: 8px 12px;
+  background: var(--surface);
+  border-radius: var(--r-sm);
+  box-shadow: var(--sh-out-sm);
+  color: var(--text-muted);
+}
+.prog-item.ok { color: var(--ok); }
+.prog-item.err { color: var(--err); }
+
+/* ── 预览工具栏 ───────────────────────────────────────── */
+.preview-toolbar {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px; flex-wrap: wrap; gap: 12px;
+}
+
+/* ── 报告预览（公文纸面，嵌入凹陷托架） ─────────────── */
+#previewCard { box-shadow: var(--sh-out-lg); }
+.report {
+  background: var(--paper);
+  color: #2b2b2b;
+  border-radius: var(--r-md);
+  padding: 40px 46px;
+  font-family: "SimSun", "Songti SC", "Microsoft YaHei", serif;
+  line-height: 1.95;
+  font-size: 15px;
+  box-shadow: 6px 6px 16px #c5cad1, -6px -6px 16px #ffffff;
+}
+.report-title {
+  text-align: center; font-size: 26px; font-weight: 700;
+  font-family: "SimHei", "Microsoft YaHei", sans-serif;
+  margin: 0 0 12px; color: #1f1f1f;
+}
+.report-chapter { margin-top: 14px; }
+.report-chapter p { margin: 8px 0; text-align: justify; }
+.report-chapter h3 {
+  font-size: 18px; font-weight: 700;
+  font-family: "SimHei", "Microsoft YaHei", sans-serif;
+  margin: 18px 0 6px;
+  color: #2b2b2b;
+  border-bottom: 2px solid #d9c7ff;
+  padding-bottom: 5px;
+}
+.report h2 {
+  font-size: 20px;
+  font-family: "SimHei", "Microsoft YaHei", sans-serif;
+  margin: 26px 0 8px;
+  border-bottom: 1px solid #d7dbe2;
+  padding-bottom: 6px;
+  color: #1f1f1f;
+}
+.report-chapter canvas { max-width: 100%; height: auto !important; margin: 8px 0; }
+.chart-caption { text-align: center; font-size: 13px; color: #555; margin: 14px 0 4px; font-family: "Microsoft YaHei", sans-serif; }
+.data-table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13px; font-family: "Microsoft YaHei", sans-serif; }
+.data-table th, .data-table td { border: 1px solid #d2d7df; padding: 6px 8px; text-align: left; }
+.data-table th { background: #eef0f6; }
+.sign { text-align: right; margin-top: 22px; line-height: 1.8; }
+
+/* ── 页脚 ─────────────────────────────────────────────── */
+.site-footer {
+  background: var(--surface-alt);
+  padding: 26px 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* ── 响应式：移动端阴影缩小 ───────────────────────────── */
+@media (max-width: 680px) {
+  :root {
+    --sh-out: 4px 4px 8px #b8bcc2, -4px -4px 8px #ffffff;
+    --sh-out-lg: 6px 6px 12px #b8bcc2, -6px -6px 12px #ffffff;
+    --sh-in: inset 4px 4px 8px #b8bcc2, inset -4px -4px 8px #ffffff;
+  }
+  .grid { grid-template-columns: 1fr; }
+  .summary-grid { grid-template-columns: repeat(2, 1fr); }
+  .report { padding: 26px 20px; }
+  .card { padding: 20px 18px; }
+}
+
+/* ── 无障碍：尊重 reduce-motion ───────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
