@@ -1,8 +1,38 @@
+<div align="center">
+
 # 🏙️ 都市天际线II — 城市数据分析与报告生成系统
 
-> **Cities: Skylines II — City Data Analysis & Government Report Generator**
->
-> A complete data pipeline for CS2: an in-game Mod collects city statistics over time, and a WPF desktop app generates government-style Word reports with charts and optional AI-powered narrative analysis.
+**Cities: Skylines II — City Data Analysis & Government Report Generator**
+
+[![GitHub Stars](https://img.shields.io/github/stars/StaLincon/CS2-CityAnalysis?style=flat-square)](https://github.com/StaLincon/CS2-CityAnalysis/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/StaLincon/CS2-CityAnalysis?style=flat-square)](https://github.com/StaLincon/CS2-CityAnalysis/network)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
+[![C#](https://img.shields.io/badge/C%23-.NET%208-green?style=flat-square)]()
+[![Last Commit](https://img.shields.io/github/last-commit/StaLincon/CS2-CityAnalysis?style=flat-square)]()
+
+一套完整的 CS2 数据流水线：游戏内 Mod 定时采集城市指标，WPF 桌面应用生成含图表与 AI 分析的政府风格 Word 报告。
+
+[快速开始](#-快速开始) · [功能亮点](#-功能亮点) · [报告模板](#-报告模板) · [架构概览](#-架构概览) · [详细文档](PROJECT_OVERVIEW.md)
+
+</div>
+
+---
+
+## 📑 目录
+
+- [功能亮点](#-功能亮点)
+- [项目组成](#-项目组成)
+- [快速开始](#-快速开始)
+- [配置说明](#-配置说明)
+- [报告模板](#-报告模板)
+- [架构概览](#-架构概览)
+- [采集指标](#-采集指标)
+- [技术栈](#-技术栈)
+- [项目结构](#-项目结构)
+- [文档](#-文档)
+- [贡献指南](#-贡献指南)
+- [许可证](#-许可证)
+- [致谢](#-致谢)
 
 ---
 
@@ -40,7 +70,9 @@
 3. 将 `appsettings.example.json` 复制为 `appsettings.json`，填入你的 API Key
 4. 运行 `DataAnalyzer.exe`
 
-### 配置说明
+---
+
+## ⚙️ 配置说明
 
 ```json
 {
@@ -86,7 +118,6 @@
 8. 城市治理与安全
 9. 居民生活与住房保障
 10. 发展展望与战略建议
-
 
 ---
 
@@ -170,14 +201,35 @@ Mod 采集 70+ 项城市指标，覆盖：
 │       ├── LlmService.cs                   # LLM调度
 │       └── *ApiService.cs                  # 6种API适配器
 │
-└── DataAnalyzer.sln                   # 解决方案文件
+├── docs/                              # 文档目录
+├── PROJECT_OVERVIEW.md                # 项目详细概述
+└── analysis.sln                       # Mod解决方案文件
 ```
+
+---
+
+## 📖 文档
+
+- [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) — 项目详细概述与设计文档
+- [docs/](docs/) — 补充文档与资源
+
+---
+
+## 🤝 贡献指南
+
+欢迎贡献！请遵循以下步骤：
+
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
 
 ---
 
 ## 📄 许可证
 
-MIT License
+本项目采用 MIT License 开源协议。
 
 ---
 
