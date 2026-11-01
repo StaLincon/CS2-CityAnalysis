@@ -37,15 +37,15 @@
 	<!--Link to the forum post where the mod can be discussed-->
 	<ForumLink Value="" />
 	<!--Version of the mod-->
-	<ModVersion Value="1.0.0" />
+	<ModVersion Value="1.0.1" />
 	<!--Recommended version of the base game to use the mod-->
-	<GameVersion Value="1.0.*" />
+	<GameVersion Value="1.6.2" />
 	<!--Dependency for the mod, can be set multiple times-->
 	<Dependency Id="" />
 	<!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
 	<RequiredDLC Value="" />
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
-	<ChangeLog Value="Initial release - basic data collection and export functionality" />
+	<ChangeLog Value="Fix parameterized statistics, per-capita wellbeing/health, aligned history and simulation dates for game 1.6.2f1" />
 	<!--External link, can be set multiple times. supported types are "discord", "github", "youtube", "twitch", "x", "paypal", "patreon", "buymeacoffee", "kofi", "crowdin", "gitlab", "gofundme"-->
 	<ExternalLink Type="github" Url="https://github.com/StaLincon/CS2-CityAnalysis" />
 	<!--Supported values Public, Private, Unlisted-->
