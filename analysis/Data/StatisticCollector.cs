@@ -4,6 +4,8 @@ using Colossal.Logging;
 using Game;
 using Game.City;
 using Game.Common;
+using Game.Prefabs;
+using Game.Economy;
 using Game.Simulation;
 using System;
 using Unity.Collections;
@@ -21,6 +23,7 @@ namespace analysis.Data
         private SimulationSystem m_SimulationSystem;
         private EntityQuery m_CityQuery;
         private bool m_Initialized;
+        private readonly Dictionary<StatisticType, HashSet<int>> m_Parameters = new Dictionary<StatisticType, HashSet<int>>();
 
         public StatisticSnapshot CurrentSnapshot { get; private set; }
 
@@ -64,92 +67,90 @@ namespace analysis.Data
 
             try
             {
+                RefreshParameters();
+                m_StatisticsSystem.CompleteWriters();
                 var snapshot = new StatisticSnapshot();
 
-                snapshot.Population = m_StatisticsSystem.GetStatisticValue(StatisticType.Population);
-                snapshot.CitizensMovedIn = m_StatisticsSystem.GetStatisticValue(StatisticType.CitizensMovedIn);
-                snapshot.CitizensMovedAway = m_StatisticsSystem.GetStatisticValue(StatisticType.CitizensMovedAway);
-                snapshot.BirthRate = m_StatisticsSystem.GetStatisticValue(StatisticType.BirthRate);
-                snapshot.DeathRate = m_StatisticsSystem.GetStatisticValue(StatisticType.DeathRate);
+                snapshot.Population = ReadValue(StatisticType.Population);
+                snapshot.CitizensMovedIn = ReadValue(StatisticType.CitizensMovedIn);
+                snapshot.CitizensMovedAway = ReadValue(StatisticType.CitizensMovedAway);
+                snapshot.BirthRate = ReadValue(StatisticType.BirthRate);
+                snapshot.DeathRate = ReadValue(StatisticType.DeathRate);
 
                 snapshot.Money = m_CitySystem.moneyAmount;
-                snapshot.Income = m_StatisticsSystem.GetStatisticValue(StatisticType.Income);
-                snapshot.Expense = m_StatisticsSystem.GetStatisticValue(StatisticType.Expense);
-                snapshot.Trade = m_StatisticsSystem.GetStatisticValue(StatisticType.Trade);
+                snapshot.Income = ReadValue(StatisticType.Income);
+                snapshot.Expense = ReadValue(StatisticType.Expense);
+                snapshot.Trade = ReadValue(StatisticType.Trade);
 
-                snapshot.AverageHappiness = m_StatisticsSystem.GetStatisticValue(StatisticType.Wellbeing);
-                snapshot.AverageHealth = m_StatisticsSystem.GetStatisticValue(StatisticType.Health);
-                snapshot.HomelessCount = m_StatisticsSystem.GetStatisticValue(StatisticType.HomelessCount);
+                snapshot.AverageHappiness = StatisticMath.Average(ReadTotal(StatisticType.Wellbeing), snapshot.Population);
+                snapshot.AverageHealth = StatisticMath.Average(ReadTotal(StatisticType.Health), snapshot.Population);
+                snapshot.HomelessCount = ReadValue(StatisticType.HomelessCount);
 
-                snapshot.WorkerCount = m_StatisticsSystem.GetStatisticValue(StatisticType.WorkerCount);
-                snapshot.Unemployed = m_StatisticsSystem.GetStatisticValue(StatisticType.Unemployed);
+                snapshot.WorkerCount = ReadValue(StatisticType.WorkerCount);
+                snapshot.Unemployed = ReadValue(StatisticType.Unemployed);
 
-                snapshot.TouristCount = m_StatisticsSystem.GetStatisticValue(StatisticType.TouristCount);
-                snapshot.TouristIncome = m_StatisticsSystem.GetStatisticValue(StatisticType.TouristIncome);
-                snapshot.LodgingUsed = m_StatisticsSystem.GetStatisticValue(StatisticType.LodgingUsed);
-                snapshot.LodgingTotal = m_StatisticsSystem.GetStatisticValue(StatisticType.LodgingTotal);
+                snapshot.TouristCount = ReadValue(StatisticType.TouristCount);
+                snapshot.TouristIncome = ReadValue(StatisticType.TouristIncome);
+                snapshot.LodgingUsed = ReadValue(StatisticType.LodgingUsed);
+                snapshot.LodgingTotal = ReadValue(StatisticType.LodgingTotal);
 
-                snapshot.CrimeRate = m_StatisticsSystem.GetStatisticValue(StatisticType.CrimeRate);
-                snapshot.CrimeCount = m_StatisticsSystem.GetStatisticValue(StatisticType.CrimeCount);
+                snapshot.CrimeRate = ReadValue(StatisticType.CrimeRate);
+                snapshot.CrimeCount = ReadValue(StatisticType.CrimeCount);
 
-                snapshot.PassengerCountBus = m_StatisticsSystem.GetStatisticValue(StatisticType.PassengerCountBus);
-                snapshot.PassengerCountSubway = m_StatisticsSystem.GetStatisticValue(StatisticType.PassengerCountSubway);
-                snapshot.PassengerCountTrain = m_StatisticsSystem.GetStatisticValue(StatisticType.PassengerCountTrain);
-                snapshot.PassengerCountTram = m_StatisticsSystem.GetStatisticValue(StatisticType.PassengerCountTram);
-                snapshot.PassengerCountAirplane = m_StatisticsSystem.GetStatisticValue(StatisticType.PassengerCountAirplane);
+                snapshot.PassengerCountBus = ReadValue(StatisticType.PassengerCountBus);
+                snapshot.PassengerCountSubway = ReadValue(StatisticType.PassengerCountSubway);
+                snapshot.PassengerCountTrain = ReadValue(StatisticType.PassengerCountTrain);
+                snapshot.PassengerCountTram = ReadValue(StatisticType.PassengerCountTram);
+                snapshot.PassengerCountAirplane = ReadValue(StatisticType.PassengerCountAirplane);
 
-                snapshot.ResidentialTaxableIncome = m_StatisticsSystem.GetStatisticValue(StatisticType.ResidentialTaxableIncome);
-                snapshot.CommercialTaxableIncome = m_StatisticsSystem.GetStatisticValue(StatisticType.CommercialTaxableIncome);
-                snapshot.IndustrialTaxableIncome = m_StatisticsSystem.GetStatisticValue(StatisticType.IndustrialTaxableIncome);
-                snapshot.OfficeTaxableIncome = m_StatisticsSystem.GetStatisticValue(StatisticType.OfficeTaxableIncome);
+                snapshot.ResidentialTaxableIncome = ReadValue(StatisticType.ResidentialTaxableIncome);
+                snapshot.CommercialTaxableIncome = ReadValue(StatisticType.CommercialTaxableIncome);
+                snapshot.IndustrialTaxableIncome = ReadValue(StatisticType.IndustrialTaxableIncome);
+                snapshot.OfficeTaxableIncome = ReadValue(StatisticType.OfficeTaxableIncome);
 
-                snapshot.EducationCount = m_StatisticsSystem.GetStatisticValue(StatisticType.EducationCount);
-                snapshot.AdultsCount = m_StatisticsSystem.GetStatisticValue(StatisticType.AdultsCount);
-                snapshot.Age = m_StatisticsSystem.GetStatisticValue(StatisticType.Age);
+                snapshot.EducationCount = ReadValue(StatisticType.EducationCount);
+                snapshot.AdultsCount = ReadValue(StatisticType.AdultsCount);
+                snapshot.Age = ReadValue(StatisticType.Age);
 
-                snapshot.CollectedMail = m_StatisticsSystem.GetStatisticValue(StatisticType.CollectedMail);
-                snapshot.DeliveredMail = m_StatisticsSystem.GetStatisticValue(StatisticType.DeliveredMail);
+                snapshot.CollectedMail = ReadValue(StatisticType.CollectedMail);
+                snapshot.DeliveredMail = ReadValue(StatisticType.DeliveredMail);
 
-                snapshot.PassengerCountTaxi = m_StatisticsSystem.GetStatisticValue(StatisticType.PassengerCountTaxi);
-                snapshot.PassengerCountShip = m_StatisticsSystem.GetStatisticValue(StatisticType.PassengerCountShip);
+                snapshot.PassengerCountTaxi = ReadValue(StatisticType.PassengerCountTaxi);
+                snapshot.PassengerCountShip = ReadValue(StatisticType.PassengerCountShip);
 
-                snapshot.CargoCountTruck = m_StatisticsSystem.GetStatisticValue(StatisticType.CargoCountTruck);
-                snapshot.CargoCountTrain = m_StatisticsSystem.GetStatisticValue(StatisticType.CargoCountTrain);
-                snapshot.CargoCountShip = m_StatisticsSystem.GetStatisticValue(StatisticType.CargoCountShip);
-                snapshot.CargoCountAirplane = m_StatisticsSystem.GetStatisticValue(StatisticType.CargoCountAirplane);
+                snapshot.CargoCountTruck = ReadValue(StatisticType.CargoCountTruck);
+                snapshot.CargoCountTrain = ReadValue(StatisticType.CargoCountTrain);
+                snapshot.CargoCountShip = ReadValue(StatisticType.CargoCountShip);
+                snapshot.CargoCountAirplane = ReadValue(StatisticType.CargoCountAirplane);
 
-                snapshot.ServiceWealth = m_StatisticsSystem.GetStatisticValue(StatisticType.ServiceWealth);
-                snapshot.ServiceCount = m_StatisticsSystem.GetStatisticValue(StatisticType.ServiceCount);
-                snapshot.ServiceWorkers = m_StatisticsSystem.GetStatisticValue(StatisticType.ServiceWorkers);
-                snapshot.ServiceMaxWorkers = m_StatisticsSystem.GetStatisticValue(StatisticType.ServiceMaxWorkers);
+                snapshot.ServiceWealth = ReadValue(StatisticType.ServiceWealth);
+                snapshot.ServiceCount = ReadValue(StatisticType.ServiceCount);
+                snapshot.ServiceWorkers = ReadValue(StatisticType.ServiceWorkers);
+                snapshot.ServiceMaxWorkers = ReadValue(StatisticType.ServiceMaxWorkers);
 
-                snapshot.ProcessingWealth = m_StatisticsSystem.GetStatisticValue(StatisticType.ProcessingWealth);
-                snapshot.ProcessingCount = m_StatisticsSystem.GetStatisticValue(StatisticType.ProcessingCount);
-                snapshot.ProcessingWorkers = m_StatisticsSystem.GetStatisticValue(StatisticType.ProcessingWorkers);
-                snapshot.ProcessingMaxWorkers = m_StatisticsSystem.GetStatisticValue(StatisticType.ProcessingMaxWorkers);
+                snapshot.ProcessingWealth = ReadValue(StatisticType.ProcessingWealth);
+                snapshot.ProcessingCount = ReadValue(StatisticType.ProcessingCount);
+                snapshot.ProcessingWorkers = ReadValue(StatisticType.ProcessingWorkers);
+                snapshot.ProcessingMaxWorkers = ReadValue(StatisticType.ProcessingMaxWorkers);
 
-                snapshot.OfficeWealth = m_StatisticsSystem.GetStatisticValue(StatisticType.OfficeWealth);
-                snapshot.OfficeCount = m_StatisticsSystem.GetStatisticValue(StatisticType.OfficeCount);
-                snapshot.OfficeWorkers = m_StatisticsSystem.GetStatisticValue(StatisticType.OfficeWorkers);
-                snapshot.OfficeMaxWorkers = m_StatisticsSystem.GetStatisticValue(StatisticType.OfficeMaxWorkers);
+                snapshot.OfficeWealth = ReadValue(StatisticType.OfficeWealth);
+                snapshot.OfficeCount = ReadValue(StatisticType.OfficeCount);
+                snapshot.OfficeWorkers = ReadValue(StatisticType.OfficeWorkers);
+                snapshot.OfficeMaxWorkers = ReadValue(StatisticType.OfficeMaxWorkers);
 
-                snapshot.CityServiceWorkers = m_StatisticsSystem.GetStatisticValue(StatisticType.CityServiceWorkers);
-                snapshot.CityServiceMaxWorkers = m_StatisticsSystem.GetStatisticValue(StatisticType.CityServiceMaxWorkers);
+                snapshot.CityServiceWorkers = ReadValue(StatisticType.CityServiceWorkers);
+                snapshot.CityServiceMaxWorkers = ReadValue(StatisticType.CityServiceMaxWorkers);
 
-                snapshot.HouseholdWealth = m_StatisticsSystem.GetStatisticValue(StatisticType.HouseholdWealth);
-                snapshot.HouseholdCount = m_StatisticsSystem.GetStatisticValue(StatisticType.HouseholdCount);
+                snapshot.HouseholdWealth = ReadValue(StatisticType.HouseholdWealth);
+                snapshot.HouseholdCount = ReadValue(StatisticType.HouseholdCount);
 
-                snapshot.SeniorWorkerInDemandPercentage = m_StatisticsSystem.GetStatisticValue(StatisticType.SeniorWorkerInDemandPercentage);
-                snapshot.EscapedArrestCount = m_StatisticsSystem.GetStatisticValue(StatisticType.EscapedArrestCount);
+                snapshot.SeniorWorkerInDemandPercentage = ReadValue(StatisticType.SeniorWorkerInDemandPercentage);
+                snapshot.EscapedArrestCount = ReadValue(StatisticType.EscapedArrestCount);
 
-                snapshot.WellbeingLevel = m_StatisticsSystem.GetStatisticValue(StatisticType.WellbeingLevel);
-                snapshot.HealthLevel = m_StatisticsSystem.GetStatisticValue(StatisticType.HealthLevel);
+                snapshot.WellbeingLevel = ReadValue(StatisticType.WellbeingLevel);
+                snapshot.HealthLevel = ReadValue(StatisticType.HealthLevel);
 
-                // 使用TimeSystem直接获取精确的游戏时间
-                var gameDateTime = m_TimeSystem.GetCurrentDateTime();
-                snapshot.GameYear = gameDateTime.Year;
-                snapshot.GameMonth = gameDateTime.Month;
-                snapshot.GameDay = gameDateTime.Day;
+                GetDate(m_SimulationSystem.frameIndex, out snapshot.GameYear, out snapshot.GameMonth, out snapshot.GameDay);
                 snapshot.DaysPerYear = m_TimeSystem.daysPerYear;
                 snapshot.GameTick = m_SimulationSystem.frameIndex;
 
@@ -189,6 +190,8 @@ namespace analysis.Data
             {
                 m_Log.Info($"Exporting full history... (sampleCount={m_StatisticsSystem.sampleCount})");
 
+                RefreshParameters();
+                m_StatisticsSystem.CompleteWriters();
                 var allHistory = new Dictionary<string, List<int>>();
                 var totalSamples = m_StatisticsSystem.sampleCount;
 
@@ -268,61 +271,107 @@ namespace analysis.Data
             }
         }
 
-        private void ExportStat(Dictionary<string, List<int>> target, string key, StatisticType type, int parameter = 0)
+        private void RefreshParameters()
         {
-            var data = m_StatisticsSystem.GetStatisticDataArray(type, parameter);
-            if (data.Length > 0)
-                target[key] = new List<int>(data);
+            m_Parameters.Clear();
+            using (var query = m_World.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<StatisticsData>()))
+            using (var entities = query.ToEntityArray(Allocator.Temp))
+            {
+                foreach (var entity in entities)
+                {
+                    var type = m_World.EntityManager.GetComponentData<StatisticsData>(entity).m_StatisticType;
+                    if (!m_Parameters.TryGetValue(type, out var parameters))
+                        m_Parameters[type] = parameters = new HashSet<int>();
+                    if (m_World.EntityManager.HasBuffer<StatisticParameterData>(entity))
+                    {
+                        var buffer = m_World.EntityManager.GetBuffer<StatisticParameterData>(entity, true);
+                        foreach (var parameter in buffer) parameters.Add(parameter.m_Value);
+                    }
+                    else parameters.Add(0);
+                }
+            }
+        }
+
+        private IEnumerable<int> Parameters(StatisticType type)
+        {
+            if (m_Parameters.TryGetValue(type, out var parameters)) return parameters;
+            return new[] { 0 };
+        }
+
+        private long ReadTotal(StatisticType type)
+        {
+            long total = 0;
+            foreach (int parameter in Parameters(type))
+                total += m_StatisticsSystem.GetStatisticValueLong(type, parameter) * Multiplier(type, parameter);
+            return total;
+        }
+
+        private int Multiplier(StatisticType type, int parameter)
+        {
+            if (type != StatisticType.Trade) return 1;
+            // Match StatisticsUISystem: convert each traded resource to its market value.
+            var prefabs = m_World.GetExistingSystemManaged<ResourceSystem>().GetPrefabs();
+            var entity = prefabs[EconomyUtils.GetResource(parameter)];
+            return (int)EconomyUtils.GetMarketPrice(m_World.EntityManager.GetComponentData<ResourceData>(entity));
+        }
+
+        private int ReadValue(StatisticType type) => StatisticMath.Saturate(ReadTotal(type));
+
+        private long[] ReadHistory(StatisticType type)
+        {
+            var values = new long[m_StatisticsSystem.sampleCount];
+            foreach (int parameter in Parameters(type))
+            {
+                using (var data = m_StatisticsSystem.GetStatisticDataArrayLong(type, parameter))
+                {
+                    var source = data.ToArray();
+                    int multiplier = Multiplier(type, parameter);
+                    for (int i = 0; i < source.Length; i++) source[i] *= multiplier;
+                    StatisticMath.AddAligned(values, source);
+                }
+            }
+            return values;
+        }
+
+        private void ExportStat(Dictionary<string, List<int>> target, string key, StatisticType type)
+        {
+            var data = ReadHistory(type);
+            var population = type == StatisticType.Wellbeing || type == StatisticType.Health
+                ? ReadHistory(StatisticType.Population) : null;
+            var values = new List<int>(data.Length);
+            for (int i = 0; i < data.Length; i++)
+                values.Add(population == null ? StatisticMath.Saturate(data[i]) : StatisticMath.Average(data[i], population[i]));
+            target[key] = values;
+        }
+
+        private void GetDate(uint frame, out int year, out int month, out int day)
+        {
+            using (var query = m_World.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<TimeData>()))
+            {
+                var data = TimeData.GetSingleton(query);
+                int days = m_TimeSystem.daysPerYear;
+                int epochTicks = (int)Math.Round(data.TimeOffset * TimeSystem.kTicksPerDay)
+                    + (int)Math.Round(data.GetDateOffset(days) * TimeSystem.kTicksPerDay * days);
+                StatisticMath.GetDate(frame, data.m_FirstFrame, epochTicks, data.m_StartingYear,
+                    days, TimeSystem.kTicksPerDay, out year, out month, out day);
+            }
         }
 
         private void ExportTimeData(Dictionary<string, List<int>> target, int totalSamples)
         {
-            if (totalSamples <= 0) return;
-
-            var gameYears = new List<int>(totalSamples);
-            var gameMonths = new List<int>(totalSamples);
-            var gameDays = new List<int>(totalSamples);
-
-            // 获取 TimeData 用于自行计算历史时间
-            // 注意：TimeSystem.GetDateTime(frameIndex) 的 renderingFrame 参数被内部忽略，
-            // 始终返回当前时间，因此不能使用它来获取历史样本的时间。
-            // 我们使用 TimeSystem.GetDay 静态方法根据帧索引计算经过的天数，再推算年月日。
-            var timeDataQuery = m_World.EntityManager.CreateEntityQuery(
-                Unity.Entities.ComponentType.ReadOnly<Game.Common.TimeData>()
-            );
-            var timeData = Game.Common.TimeData.GetSingleton(timeDataQuery);
-            timeDataQuery.Dispose();
-
-            int daysPerYear = m_TimeSystem.daysPerYear;
-            int startingYear = timeData.m_StartingYear;
-            int startingMonth = timeData.m_StartingMonth;
-
+            var years = new List<int>(totalSamples);
+            var months = new List<int>(totalSamples);
+            var days = new List<int>(totalSamples);
             for (int i = 0; i < totalSamples; i++)
             {
-                uint frameIndex = m_StatisticsSystem.GetSampleFrameIndex(i);
-
-                // 使用 TimeSystem.GetDay 计算从起始帧开始经过的天数
-                int totalDays = TimeSystem.GetDay(frameIndex, timeData);
-
-                // 计算年份和月份
-                int yearOffset = totalDays / daysPerYear;
-                int dayInYear = totalDays % daysPerYear;
-                int month = dayInYear + 1; // dayInYear 是 0-based，month 是 1-based
-
-                int gameYear = startingYear + yearOffset;
-                int gameMonth = month;
-                int gameDay = dayInYear + 1; // 简化：用年内天数作为日
-
-                gameYears.Add(gameYear);
-                gameMonths.Add(gameMonth);
-                gameDays.Add(gameDay);
+                GetDate(m_StatisticsSystem.GetSampleFrameIndex(i), out int year, out int month, out int day);
+                years.Add(year);
+                months.Add(month);
+                days.Add(day);
             }
-
-            target["gameYear"] = gameYears;
-            target["gameMonth"] = gameMonths;
-            target["gameDay"] = gameDays;
-
-            m_Log.Info($"Exported time data: {totalSamples} samples, year range {gameYears[0]}-{gameYears[gameYears.Count - 1]}, month range {gameMonths[0]}-{gameMonths[gameMonths.Count - 1]}");
+            target["gameYear"] = years;
+            target["gameMonth"] = months;
+            target["gameDay"] = days;
         }
 
         private string SerializeHistory(Dictionary<string, List<int>> history, int totalSamples)

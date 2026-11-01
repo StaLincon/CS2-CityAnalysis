@@ -15,11 +15,8 @@ namespace analysis
     {
         public const string kMainGroup = "Main";
 
-        private ToolDownloader m_Downloader;
-
         public Setting(IMod mod) : base(mod)
         {
-            m_Downloader = new ToolDownloader();
         }
 
         [SettingsUIButton]
@@ -38,7 +35,7 @@ namespace analysis
         {
             set
             {
-                m_Downloader.OpenDownloadPage();
+                UnityEngine.Application.OpenURL("https://github.com/StaLincon/CS2-CityAnalysis/releases");
             }
         }
 

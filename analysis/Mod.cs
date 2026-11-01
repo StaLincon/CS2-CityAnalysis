@@ -30,7 +30,7 @@ namespace analysis
 
             updateSystem.UpdateAt<AnalysisSystem>(SystemUpdatePhase.PostSimulation);
 
-            Log.Info("City Analysis Data mod loaded. Use Options -> City Analysis Data to export.");
+            Log.Info("City Analysis Data compatibility build 1.0.1 (game 1.6.2f1) loaded. Use Options -> City Analysis Data to export.");
         }
 
         public void OnDispose()
